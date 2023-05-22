@@ -89,4 +89,4 @@ begin
 end
 //
 -- ‹æØ‚è•¶Žš‚ð‚à‚Æ‚É–ß‚·
-DELIMITER
+DELIMITER ;
