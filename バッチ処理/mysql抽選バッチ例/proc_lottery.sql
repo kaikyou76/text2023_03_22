@@ -15,7 +15,7 @@ begin
     DECLARE nwk_entrant_count        int;   -- 参加人数累計
     DECLARE vwk_last_event_id        VARCHAR(100);
     DECLARE vwk_last_entry_frame_id  VARCHAR(100);
-    DECLARE vwk_lottery_result       VARCHAR(100);
+    DECLARE vwk_lottery_result       VARCHAR(100); -- 抽選結果
  
     -- 「DECLARE done INT DEFAULT 0;」は、ストアドプロシージャ内で使用されるローカル変数の宣言と初期化を行っています。
     --  ここでは、「done」という整数型の変数を宣言し、初期値として0を設定しています。
