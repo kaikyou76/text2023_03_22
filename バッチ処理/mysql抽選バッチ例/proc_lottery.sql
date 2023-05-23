@@ -5,14 +5,14 @@ DELIMITER //
 create procedure event_manage.proc_lottery()
 begin
     --  カーソル内容を格納する用の変数
-    DECLARE vwk_event_id       VARCHAR(100);
-    DECLARE vwk_entry_frame_id VARCHAR(100);
-    DECLARE nwk_entrant_limit  int;
+    DECLARE vwk_event_id       VARCHAR(100); -- 大会ID
+    DECLARE vwk_entry_frame_id VARCHAR(100); -- エントリ枠ID
+    DECLARE nwk_entrant_limit  int;          -- 参加人数上限
     DECLARE vwk_user_id        VARCHAR(100);
     DECLARE nwk_rand_num       float;
     
     -- ループ制御用変数
-    DECLARE nwk_entrant_count        int;
+    DECLARE nwk_entrant_count        int;   -- 参加人数累計
     DECLARE vwk_last_event_id        VARCHAR(100);
     DECLARE vwk_last_entry_frame_id  VARCHAR(100);
     DECLARE vwk_lottery_result       VARCHAR(100);
@@ -23,16 +23,16 @@ begin
     -- カーソルの定義
     DECLARE cur1 CURSOR FOR 
     SELECT * FROM(
-                  SELECT t.event_id
-                        ,t.entry_frame_id
-                        ,t.entrant_limit
-                        ,s.user_id
+                  SELECT t.event_id -- 大会ID
+                        ,t.entry_frame_id -- エントリ枠ID
+                        ,t.entrant_limit -- 参加人数上限
+                        ,s.user_id -- 会員ID
                         ,RAND() as rand_num
                    FROM event_manage.m_event_entry t
                   INNER JOIN event_manage.t_event_entry_user s on t.event_id = s.event_id and t.entry_frame_id = s.entry_frame_id
                   WHERE t.lottery_date <= sysdate
-                    and t.lottery_div = '2'
-                    and t.entry_frame_status <> '4'
+                    and t.lottery_div = '2' -- 抽選区分 1：先着順、2：抽選
+                    and t.entry_frame_status <> '4' --1：募集前、2：募集中、3、抽選中、4：参加者確定'
                  )v order by event_id, entry_frame_id, rand_num
     ;
     -- エラーハンドラの宣言を行っています。
@@ -55,7 +55,7 @@ begin
       IF vwk_last_event_id <> vwk_event_id or vwk_last_entry_frame_id <> vwk_entry_frame_id then
         set nwk_entrant_count = 1;
         UPDATE event_manage.m_event_entry t
-           SET t.entry_frame_status = '4'
+           SET t.entry_frame_status = '4'  --1：募集前、2：募集中、3、抽選中、4：参加者確定'
          WHERE t.event_id = vwk_last_event_id
            AND t.entry_frame_id = vwk_last_entry_frame_id
         ;
@@ -64,10 +64,10 @@ begin
       -- 抽選結果の設定
       IF nwk_entrant_limit >= nwk_entrant_count THEN
          -- 当選の場合
-         set vwk_lottery_result = '3':
+         set vwk_lottery_result = '3'; -- 3：参加確定(未払い)
       ELSE
-         -- 当選なし場合
-         set vwk_lottery_result = '5':
+         -- 未当選の場合
+         set vwk_lottery_result = '5'; -- 5：落選
       END IF;
       
       -- 抽選結果で更新
