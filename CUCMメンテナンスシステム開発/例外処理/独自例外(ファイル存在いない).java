@@ -9,29 +9,36 @@ public class MyApplication {
     public static void main(String[] args) {
         SpringApplication.run(MyApplication.class, args);
 
-        String fileName = "example.csv"; // ƒtƒ@ƒCƒ‹–¼‚ğw’è
+        String fileName = "example.csv"; // ãƒ•ã‚¡ã‚¤ãƒ«åã‚’æŒ‡å®š
 
-        // ƒtƒ@ƒCƒ‹‚Ì‘¶İ‚ğŠm”F
+        // ãƒ•ã‚¡ã‚¤ãƒ«ã®å­˜åœ¨ã‚’ç¢ºèª
         File file = new File(fileName);
         if (!file.exists()) {
-            String errorMessage = "‘¶İ‚µ‚È‚¢ CSV/EOFƒtƒ@ƒCƒ‹–¼: " + fileName;
+            String errorMessage = "å­˜åœ¨ã—ãªã„ CSV/EOFãƒ•ã‚¡ã‚¤ãƒ«å: " + fileName;
             throw new BatRuntimeException("BT000E002", errorMessage);
         }
 
-        // ƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚éê‡A‚»‚Ì‘¼‚Ìˆ—‚ğÀs‚·‚é
+        // ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹å ´åˆã€ãã®ä»–ã®å‡¦ç†ã‚’å®Ÿè¡Œã™ã‚‹
         // ...
     }
 }
 
 class BatRuntimeException extends RuntimeException {
     private final String messageId;
+    private final String message;
 
     public BatRuntimeException(String messageId, String message) {
         super(message);
         this.messageId = messageId;
+        this.message = message;
     }
 
     public String getMessageId() {
         return messageId;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
     }
 }
