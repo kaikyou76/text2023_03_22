@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/batch"
+              xmlns:beans="http://www.springframework.org/schema/beans"
+              xmlns:aop="http://www.springframework.org/schema/aop"
+              xmlns:tx="http://www.springframework.org/schema/tx"
+              xmlns:p="http://www.springframework.org/schema/p"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xmlns:util="http://www.springframework.org/schema/util"
+              xsi:schemaLocation="
+                http://www.springframework.org/schema/beans 
+                http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+                http://www.springframework.org/schema/batch 
+                http://www.springframework.org/schema/batch/spring-batch-2.1.xsd 
+                http://www.springframework.org/schema/aop 
+                http://www.springframework.org/schema/aop/spring-aop-3.0.xsd 
+                http://www.springframework.org/schema/tx 
+                http://www.springframework.org/schema/tx/spring-tx-3.0.xsd 
+                http://www.springframework.org/schema/util 
+                http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+    <!-- CSVジョブ -->
+    <!-- 全テーブル一括 -->
+    <job id="csvAppImport">
+        <step id="appImport" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="appCSVImport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <job id="csvAppExport">
+        <step id="appExport" parent="simplestep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="appCSVExport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <!-- 課金 -->
+    <job id="csvChargeExport">
+        <step id="chargeExport" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="chargeCSVExport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <!-- 電子電話帳 -->
+    <job id="csvTe|DirExport">
+        <step id="teldirExport" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="telDirCSVExport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <!-- ユニティ -->
+    <job id="csvCUCExport">
+        <step id="CUCExport" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="CUCCSVExport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <!-- 回線情報一覧 -->
+    <job id="csvLineListExport">
+        <step id="lineListExport" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="linelistCSVExport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <!-- ActiveDirectory -->
+    <job id="csvÅDExport">
+        <step id="actDirExport" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="actDirCSVExport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <!-- 通録 -->
+    <job id="csvoiceLogger Import">
+        <step id="voiceLogger Import" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="voiceLoggerCSVImport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <step id="actDirExport" parent="simpleStep">
+        <tasklet>
+            <chunk reader="simpleReader" processor="simpleProcessor" writer="actDirCSVExport" />
+        </tasklet>
+    </step>
+
+    <!-- 通録 -->
+    <job id="csvoiceLogger Import">
+        <step id="voiceLogger Import" parent="simpleStep">
+            <tasklet>
+                <chunk reader="simpleReader" processor="simpleProcessor" writer="voiceLoggerCSVImport" />
+            </tasklet>
+        </step>
+    </job>
+
+    <beans:bean id="simpleReader" class="jp.co.ksc.batch.step.reader.SimpleReader" />
+    <beans:bean id="simpleProcessor" class="jp.co.ksc.batch.step.processor.SimpleProcessor" />
+
+    <!-- 全テーブル一括 -->
+    <beans:bean id="appCSVImport" class="jp.co.ksc.batch.step.writer.AppCSVImport" />
+    <beans:bean id="appCSVExport" class="jp.co.ksc.batch.step.writer.AppCSVExport" />
+
+    <!-- 課金 -->
+    <beans:bean id="chargeCSVExport" class="jp.co.ksc.batch.step.writer.ChargeCSVExport" />
+
+    <!-- 電子電話帳 -->
+    <beans:bean id="telDirCSVExport" class="jp.co.ksc.batch.step.writer.TelDirCSVExport" />
+
+    <!-- ユニティ -->
+    <beans:bean id="CUCCSVExport" class="jp.co.ksc.batch.step.writer.CUCCSVExport" />
+
+    <!-- 回線情報一覧 -->
+    <beans:bean id="linelistCSVExport" class="jp.co.ksc.batch.step.writer.LineListCSVExport" />
+
+    <!-- ActiveDirectory -->
+    <beans:bean id="actDirCSVExport" class="jp.co.ksc.batch.step.writer.ADCSVExport" />
+
+    <!-- 通録 -->
+    <beans:bean id="voiceLoggerCSVImport" class="jp.co.ksc.batch.step.writer.VoiceLoggerCSVImport" />
+    <beans:bean id="voiceLoggerCSVExport" class="jp.co.ksc.batch.step.writer.VoiceLoggerCSVExport" />
+
+</beans:beans>
+
+このXMLファイルは、Spring Batchフレームワークのジョブ定義ファイルです。Spring Batchは、バッチ処理（大量のデータを一括で処理するジョブ）を簡単かつ効率的に作成するためのフレームワークです。
+
+このXMLファイルでは、以下の役割があります：
+
+バッチジョブの定義：<job> タグを使用して、バッチジョブを定義します。各ジョブには一意のIDが割り当てられ、ジョブのステップ（処理単位）が含まれます。
+
+ステップの定義：<step> タグを使用して、バッチジョブ内のステップを定義します。各ステップには一意のIDが割り当てられ、ステップのタスクレット（処理単位）が含まれます。
+
+タスクレットの定義：<tasklet> タグを使用して、ステップ内のタスクレットを定義します。タスクレットには、読み取り処理、処理（加工）、書き込み処理などのステップの具体的な処理が含まれます。
+
+リーダー・プロセッサ・ライターの定義：<beans:bean> タグを使用して、各タスクレット内のリーダー（データ読み取り）、プロセッサ（データ処理）、ライター（データ書き込み）の具体的な実装クラスを定義します。
+
+このXMLファイルには、複数のジョブとステップが定義されており、それぞれのステップには異なるリーダー、プロセッサ、ライターが設定されています。これにより、複数の異なるバッチ処理を実行するための柔軟性が提供されます。
+
+Spring Batchは、大規模なデータ処理や定期的なバッチ処理が必要な場合に特に有用です。このXMLファイルを使用して、バッチ処理のフローと各処理ステップの具体的な実装を定義することができます。
+
+
+
+
+
+Regenerate response
