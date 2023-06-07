@@ -97,8 +97,8 @@
     </step>
 
     <!-- 通録 -->
-    <job id="csvoiceLogger Import">
-        <step id="voiceLogger Import" parent="simpleStep">
+    <job id="csvoiceLoggerImport">
+        <step id="voiceLoggerImport" parent="simpleStep">
             <tasklet>
                 <chunk reader="simpleReader" processor="simpleProcessor" writer="voiceLoggerCSVImport" />
             </tasklet>
@@ -149,8 +149,3 @@
 
 Spring Batchは、大規模なデータ処理や定期的なバッチ処理が必要な場合に特に有用です。このXMLファイルを使用して、バッチ処理のフローと各処理ステップの具体的な実装を定義することができます。
 
-
-
-
-
-Regenerate response
