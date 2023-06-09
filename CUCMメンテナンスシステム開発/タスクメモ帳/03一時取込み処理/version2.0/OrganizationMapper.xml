@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.netmarks.persistence.OrganizationMapper">
+  <!-- ### INSERT ### -->
+  <!-- 組織情報登録処理 -->
+  <insert id="insertOrganization" parameterType="OrganizationEntity">
+    INSERT INTO TMP_INTEGRATEDID_ORGANIZATION (
+      ORGANIZATION_CD,
+      ORGANIZATION_NM,
+      ORGANIZATION_NO,
+      ORGANIZATION_ABBREVIATED_NM,
+      PRINT_ORDER,
+      CLASS_SALES,
+      CLASS_DATA_INPUT,
+      UPDATE_DATE
+    ) VALUES (
+      #{organizationCd},
+      #{organizationNm},
+      #{organizationNo},
+      #{organizationAbbreviatedNm},
+      #{printOrder},
+      #{classSales},
+      #{classDataInput},
+      #{updateDate}
+    )
+  </insert>
+
+  <!-- ### UPDATE ### -->
+  <!-- 組織情報を変更する -->
+  <update id="updateOrganization" parameterType="OrganizationEntity">
+    UPDATE TMP_INTEGRATEDID_ORGANIZATION SET
+      ORGANIZATION_NM = #{organizationNm},
+      ORGANIZATION_NO = #{organizationNo},
+      ORGANIZATION_ABBREVIATED_NM = #{organizationAbbreviatedNm},
+      PRINT_ORDER = #{printOrder},
+      CLASS_SALES = #{classSales},
+      CLASS_DATA_INPUT = #{classDataInput},
+      UPDATE_DATE = #{updateDate}
+    WHERE ORGANIZATION_CD = #{organizationCd}
+  </update>
+
+  <!-- ### DELETE ### -->
+  <!-- 組織情報削除処理 -->
+  <delete id="deleteOrganization" parameterType="String">
+    DELETE FROM TMP_INTEGRATEDID_ORGANIZATION WHERE ORGANIZATION_CD = #{organizationCd}
+  </delete>
+</mapper>

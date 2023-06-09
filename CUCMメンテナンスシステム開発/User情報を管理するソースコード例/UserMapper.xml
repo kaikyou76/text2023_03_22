@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.netmarks.persistence.UserMapper">
+  <!-- ### INSERT ### -->
+  <!-- ユーザー登録処理 -->
+  <insert id="insertAppUser" parameterType="UserEntity">
+    INSERT INTO APP_USER(
+      APP_USER_ID,
+      EJ,
+      E,
+      USER_ROLE,
+      ENABLED_SHARED_USE,
+      FULLTIME_EMPLOYEE,
+      BIZ_EMPLOYEE_ID,
+      LOGIN_ID,
+      LOGIN_PASSWORD,
+      NAME_KANJI,
+      NAME_KANA,
+      BIRTHDAY,
+      FIRST_NAME,
+      LAST_NAME,
+      PIN,
+      TELEPHONE_NUMBER,
+      ENABLE_CTI_APPLICATION_USE,
+      MANAGER_USER_ID,
+      DEPARTMENT,
+      LAST_PASSWORD_UPDATETIME,
+      CUCM_UPDATE_REQUEST_FLAG,
+      DELETED,
+      ERROR_FLG,
+      CREATION_DATETIME,
+      LASTUPDATE_DATETIME
+    ) VALUES (
+      #{appUserId},
+      #{userRole},
+      #{enabledSharedUse},
+      #{fulltimeEmployee},
+      #{bizEmployeeId},
+      #{loginId},
+      #{loginPassword},
+      #{nameKanji},
+      #{nameKana},
+      #{birthday},
+      #{firstName},
+      #{lastName},
+      #{pin},
+      #{telephoneNumber},
+      #{enableCtiApplicationUse},
+      #{managerUserId},
+      #{department},
+      #{lastPasswordUpdatetime},
+      #{cucmUpdateRequestFlag},
+      #{deleted},
+      #{errorFlg},
+      #{creationDatetime},
+      #{lastupdateDatetime}
+    )
+  </insert>
+
+  <!-- ### UPDATE ### -->
+  <!-- 電話番号を変更する -->
+  <update id="updateTelephoneNumber" parameterType="UserEntity">
+    UPDATE APP_USER SET
+      TELEPHONE_NUMBER = #{telephoneNumber},
+      CUCM_UPDATE_REQUEST_FLAG = #{cucmUpdateRequestFlag},
+      LASTUPDATE_DATETIME = #{lastupdateDatetime}
+    WHERE
+      APP_USER_ID = #{appUserId}
+  </update>
+
+  <!-- パスワードを変更する -->
+  <update id="updateLoginPassword" parameterType="UserEntity">
+    UPDATE APP_USER SET
+      LOGIN_PASSWORD = #{loginPassword},
+      LAST_PASSWORD_UPDATETIME = #{lastPasswordUpdatetime}
+    WHERE
+      APP_USER_ID = #{appUserId}
+  </update>
+
+  <!-- 権限を変更する -->
+  <update id="updateUserRole" parameterType="UserEntity">
+    UPDATE APP_USER SET
+      USER_ROLE = #{userRole},
+      LASTUPDATE_DATETIME = #{lastupdateDatetime}
+    WHERE
+      APP_USER_ID = #{appUserId}
+  </update>
+
+  <!-- 共用名を変更する -->
+  <update id="updateUserKanjiName" parameterType="UserEntity">
+    UPDATE APP_USER SET
+      NAME_KANJI = #{nameKanji},
+      LASTUPDATE_DATETIME = #{lastupdateDatetime}
+    WHERE
+      APP_USER_ID = #{appUserId}
+  </update>
+
+  <!-- ### DELETE ### -->
+  <!-- ユーザー削除処理 -->
+  <delete id="deleteAppUser" parameterType="UserEntity">
+    DELETE FROM APP_USER
+    WHERE
+      APP_USER_ID = #{appUserId}
+  </delete>
+</mapper>
