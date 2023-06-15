@@ -3,12 +3,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jp.co.netmarks.persistence.OrganizationMapper;
+import jp.co.netmarks.persistence.OrganizationEntity
 
 @Service
 public class OrganizationService {
 
+    private final OrganizationMapper organizationMapper;
+
     @Autowired
-    private OrganizationMapper organizationMapper;
+    public OrganizationService(OrganizationMapper organizationMapper) {
+        this.organizationMapper = organizationMapper;
+    }
     
     public void insertOrganization(List<String> csvLines) {
         for (String line : csvLines) {

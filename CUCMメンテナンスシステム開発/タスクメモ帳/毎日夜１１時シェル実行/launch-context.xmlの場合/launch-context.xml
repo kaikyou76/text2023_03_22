@@ -1,0 +1,32 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+            http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- タスクスケジューラの設定 -->
+    <task:scheduler id="taskScheduler"/>
+
+<batch:job id="csvADExportJob">
+    <batch:step id="csvADExportStep">
+        <batch:tasklet>
+            <!-- ステップの実行ロジックを記述 -->
+            <batch:chunk reader="csvReader" writer="csvWriter" commit-interval="100"/>
+        </batch:tasklet>
+    </batch:step>
+</batch:job>
+
+    <!-- ジョブのトリガー設定 -->
+    <task:scheduled-tasks scheduler="taskScheduler">
+        <task:scheduled ref="csvADExportJob" method="launchShellScript" cron="0 0 23 * * ?"/>
+    </task:scheduled-tasks>
+</beans>
+#############################################################################################
+<task:scheduler>要素でタスクスケジューラを定義し、<task:scheduled-tasks>要素内でジョブのトリガー設定を行っています。
+<task:scheduled>要素のref属性には実行対象のジョブを指定し、method属性にはジョブ内で実行するメソッド名を指定します。
+cron属性には"Cron"式を使用して実行スケジュールを指定します。

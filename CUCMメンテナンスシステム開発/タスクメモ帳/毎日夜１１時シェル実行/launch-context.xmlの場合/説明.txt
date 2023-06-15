@@ -1,0 +1,7 @@
+上記の2つのファイルはSpring Batch環境での連携を示しています。
+
+launch-context.xml: このファイルはSpring Batchのコンテキスト設定を含んでいます。ジョブの定義、スケジューラの設定、およびジョブのトリガー設定が記述されています。ジョブのトリガーは、指定したスケジュール（cron式）に基づいてcsvADExportJobのlaunchShellScriptメソッドを実行します。
+
+CsvADExportJob.java: このファイルはCsvADExportJobクラスを定義しています。launchShellScriptメソッドは、シェルスクリプトを実行するためのコードを含んでいます。このメソッドはcsvADExportJobのトリガーとして使用され、定期的に実行されます。
+
+このように、launch-context.xmlでジョブの定義とトリガー設定を行い、CsvADExportJobクラスで実際の処理やシェルスクリプトの実行を行うことで、Spring Batch環境でのジョブの定期実行とシェルスクリプトの連携が実現されます。

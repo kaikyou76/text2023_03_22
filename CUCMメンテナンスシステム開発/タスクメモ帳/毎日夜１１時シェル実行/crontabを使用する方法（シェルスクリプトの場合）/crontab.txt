@@ -1,0 +1,5 @@
+# crontabの編集
+crontab -e
+
+# crontabファイルに以下の行を追加
+0 23 * * * /bin/sh /path/to/csvADExport.sh
