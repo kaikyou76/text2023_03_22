@@ -19,6 +19,7 @@ import org.springframework.batch.item.UnexpectedInputException;
 
 /**
  * <pre>
+ *比較情報を取得(処理なし)
  * JOBReader
  *
  * &lt;MODIFICATION HISTORY&gt;

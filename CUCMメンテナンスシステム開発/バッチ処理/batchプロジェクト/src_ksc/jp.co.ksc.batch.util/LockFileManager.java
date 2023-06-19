@@ -1,3 +1,9 @@
+package jp.co.ksc.batch.util;
+
+import java.io.File;
+import java.io.IOException;
+import jp.co.ksc.batch.exception.AlreadyExecutedException;
+
 /**
  * LockFileManager.java
  *

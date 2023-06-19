@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.netmarks.batch.persistence.LoadPersonnelMapper">
+  
+  <update id="vacuum">
+    VACUUM (VERBOSE, ANALYZE) biz_employee;
+    VACUUM (VERBOSE, ANALYZE) biz_shift;
+    VACUUM (VERBOSE, ANALYZE) biz_ad;
+    VACUUM (VERBOSE, ANALYZE) biz_organization;
+    VACUUM (VERBOSE, ANALYZE) biz_department;
+    VACUUM (VERBOSE, ANALYZE) app_user;
+    VACUUM (VERBOSE, ANALYZE) r_user_section;
+  </update>
+  
+  <!-- 閾値取得 -->
+  <select id="selectThreshold" parameterType="Map" resultType="Map">
+    SELECT threshold_value FROM threshold LIMIT 1
+  </select>
+  
+  <!-- 閾値(入社)取得 -->
+  <select id="selectEnterEmployee" resultType="Map">
+    SELECT DISTINCT employee_code
+    FROM biz_employee
+    WHERE employee_code NOT IN (SELECT biz_employee_id FROM app_user)
+  </select>
+  
+  <select id="selectEnterCount" resultType="int">
+    SELECT COUNT(1) FROM (
+    SELECT DISTINCT employee_code
+    FROM biz_employee
+    WHERE employee_code NOT IN (SELECT biz_employee_id FROM app_user)
+    ) AS EnterCnt
+  </select>
+  
+  <!-- 閾値(退社)取得 -->
+  <select id="selectRetireEmployee" resultType="Map">
+    SELECT DISTINCT biz_employee_id
+    FROM app_user
+    WHERE biz_employee_id NOT IN (SELECT employee_code FROM biz_employee)
+      AND app_user.enabled_shared_use != '1'
+  </select>
+  
+  <select id="selectRetireCount" resultType="int">
+    SELECT COUNT(1) FROM (
+    SELECT DISTINCT app_user_id
+    FROM app_user
+    WHERE biz_employee_id NOT IN (SELECT employee_code FROM biz_employee)
+      AND app_user.enabled_shared_use != '1'
+    ) AS RetireCnt
+  </select>
+  
+</mapper>
