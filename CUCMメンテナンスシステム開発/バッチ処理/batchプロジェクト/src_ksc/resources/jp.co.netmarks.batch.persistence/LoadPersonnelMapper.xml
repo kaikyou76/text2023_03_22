@@ -49,4 +49,41 @@
     ) AS RetireCnt
   </select>
   
+  <!-- 閾値(異動)取得 -->
+  <select id="selectChangeEmployee" resultType="Map"> 
+    select A.biz_employee_id,
+    R.company_d, 
+    R.section_id
+    from app_user A,
+    r_user_section R
+    where A.app_user_id=R.app_user_id
+    and biz_employee_id in
+    (select_employee_code
+    from biz_employee)
+    and (A.biz_employee_id, R.company_id, lpad(R.section_id, 5, '0')) not in (select
+    employee_code,
+    company_code,
+    department_code
+    from biz_employee)
+  </select>
+  <select id="selectChangeCount" resultType="int">
+    select count (1) from (
+    select A.biz_employee_id,
+    R.company_id,
+    R.section_id
+    from app_user A,
+    r_user_section R
+    where A.app_user_id=R.app_user_id
+    and biz_employee_id in
+    (select employee_code
+    from biz_employee)
+    and (A.biz_employee_id, R.company_id, lpad(R.section_id, 5, '0')) not
+    in (select
+    employee_code,
+    company_code,
+    department_code
+    from biz_employee)
+    ) as ChangeCnt
+  </select>  
+  
 </mapper>

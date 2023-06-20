@@ -96,4 +96,56 @@ public class PersonnelInfoDAO {
             }
         }
     }
+	
+	//**************************************
+	//閾値
+	//**************************************
+    /**
+     * 閾値取得
+     * @return 閾値
+     * @throws SQLException
+     */
+    public int getThreshold() throws SQLException {
+        int thresholdValue = 0;
+        Map<String, Object> record = lpm.selectThreshold();
+        if (record != null) {
+            Object oVal = record.get("threshold_value");
+            if (oVal != null) {
+                try {
+                    thresholdValue = Integer.valueOf(oVal.toString()).intValue();
+                } catch (Exception e) {
+                    log.debug("THRESHOLD_VALUE取得で例外:" + e);
+                }
+            }
+        }
+        return thresholdValue;
+    }
+	
+    //***********************
+    // 閾値用計測(入社数)
+    // **********************
+
+    /**
+     * 入社数取得
+     * @return 入社数
+     * @throws SQLException
+     */
+    public int getEnterCount() throws SQLException {
+        int record = 0;
+
+        try {
+            record = lpm.selectEnterCount();
+        } catch (Exception e) {
+            log.debug("閾値用計測(入社数)取得で例外:" + e);
+        }
+        return record;
+    }
+    
+    public List<Map<String, Object>> getEnterEmployeeList() throws SQLException {
+        return lpm.selectEnterEmployee();
+    }	
+
 }
+
+	
+

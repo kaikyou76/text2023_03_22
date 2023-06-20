@@ -1,0 +1,140 @@
+このDDL文を実行することで、PostgreSQLデータベースに「batch_job_instance」テーブルが作成されます。
+
+CREATE SCHEMA "org.springframework.batch.core.schema";
+
+CREATE TABLE "org.springframework.batch.core.schema"."BatchJobInstance" (
+    JOB_INSTANCE_ID BIGINT NOT NULL PRIMARY KEY,
+    VERSION BIGINT,
+    JOB_NAME VARCHAR(100) NOT NULL,
+    JOB_KEY VARCHAR(32) NOT NULL
+);
+
+CREATE TABLE batch_job_instance (
+  job_instance_id BIGINT PRIMARY KEY,
+  version BIGINT,
+  job_name VARCHAR(100),
+  job_key VARCHAR(32),
+  constraint JOB_INST_UN unique (job_name, job_key)
+);
+
+CREATE SEQUENCE batch_job_seq START 1000;
+
+CREATE SEQUENCE batch_job_execution_seq START 1000;
+
+CREATE TABLE batch_job_execution (
+  job_execution_id BIGINT NOT NULL,
+  version BIGINT,
+  job_instance_id BIGINT,
+  create_time TIMESTAMP,
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
+  status VARCHAR(10),
+  exit_code VARCHAR(2500),
+  exit_message VARCHAR(2500),
+  last_updated TIMESTAMP,
+  job_configuration_location VARCHAR(2500),
+  PRIMARY KEY (job_execution_id)
+);
+
+CREATE TABLE batch_job_execution_params (
+  job_execution_id BIGINT NOT NULL,
+  type_cd VARCHAR(6) NOT NULL,
+  key_name VARCHAR(100) NOT NULL,
+  string_val VARCHAR(250),
+  date_val TIMESTAMP,
+  long_val BIGINT,
+  double_val DOUBLE PRECISION,
+  identifying CHAR(1) NOT NULL,
+  constraint job_execution_params_pk primary key (job_execution_id, type_cd, key_name),
+  constraint job_execution_params_fk foreign key (job_execution_id)
+    references batch_job_execution (job_execution_id)
+    on delete cascade
+);
+
+CREATE TABLE batch_job_execution_context (
+  job_execution_id BIGINT NOT NULL,
+  short_context VARCHAR(250) NOT NULL,
+  serialized_context OID NOT NULL,
+  constraint job_execution_context_pk primary key (job_execution_id)
+);
+
+ALTER TABLE batch_job_execution_context ALTER COLUMN serialized_context DROP NOT NULL;
+
+ALTER TABLE batch_job_execution_context ALTER COLUMN serialized_context DROP NOT NULL;
+
+CREATE TABLE batch_step_execution (
+    step_execution_id BIGINT PRIMARY KEY,
+    version BIGINT,
+    step_name VARCHAR(100),
+    job_execution_id BIGINT,
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
+    status VARCHAR(10),
+    commit_count BIGINT,
+    read_count BIGINT,
+    filter_count BIGINT,
+    write_count BIGINT,
+    exit_code VARCHAR(2500),
+    exit_message VARCHAR(2500),
+    last_updated TIMESTAMP,
+    FOREIGN KEY (job_execution_id) REFERENCES batch_job_execution(job_execution_id)
+);
+
+ALTER TABLE batch_step_execution
+ADD COLUMN read_skip_count BIGINT;
+
+ALTER TABLE batch_step_execution
+ADD COLUMN write_skip_count BIGINT;
+
+ALTER TABLE batch_step_execution
+ADD COLUMN process_skip_count BIGINT;
+mysql workbenchからsqlをアウトプット
+ALTER TABLE batch_step_execution
+ADD COLUMN rollback_count BIGINT;
+
+CREATE SEQUENCE batch_step_execution_seq START 1;
+
+CREATE TABLE batch_step_execution_context (
+  step_execution_id BIGINT NOT NULL,
+  short_context VARCHAR(2500) NOT NULL,
+  serialized_context BYTEA,
+  CONSTRAINT step_execution_context_fk FOREIGN KEY (step_execution_id) REFERENCES batch_step_execution(step_execution_id)
+);
+
+ERROR: 列"serialized_context"は型byteaですが、式は型oidでした　ヒント: 式を書き換えるかキャストする必要があります。
+一時的なテーブルを作成します。
+CREATE TABLE batch_step_execution_context_temp (
+    step_execution_id BIGINT NOT NULL,
+    serialized_context OID,
+    CONSTRAINT fk_step_execution_context_temp FOREIGN KEY (step_execution_id) REFERENCES batch_step_execution(step_execution_id)
+);
+テーブルのデータを一時的なテーブルにコピーします。
+CREATE TABLE batch_step_execution_context_temp AS
+SELECT * FROM batch_step_execution_context;
+元のテーブルを削除します。
+DROP TABLE batch_step_execution_context;
+一時的なテーブルを元のテーブルとしてリネームします。
+ALTER TABLE batch_step_execution_context_temp
+RENAME TO batch_step_execution_context;
+
+Caused by: org.postgresql.util.PSQLException: ERROR: リレーション"batch_step_execution_context"の列"short_context"は存在しません
+ALTER TABLE batch_step_execution_context
+ADD COLUMN short_context BYTEA;
+
+
+Caused by: org.postgresql.util.PSQLException: ERROR: 列"short_context"は型byteaですが、式は型character varyingでした　ヒント: 式を書き換えるかキャストする必要があります。
+ALTER TABLE batch_step_execution_context
+ALTER COLUMN short_context TYPE bytea;
+
+UPDATE batch_step_execution_context
+SET short_context = E'\\x' || encode(your_value::bytea, 'hex');
+
+mvn clean install
+jar tf /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar | grep CommandLineJobRunner
+jar tf /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar
+
+
+java -Dfile.encoding=UTF-8 -cp /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar:/irdb/src/main/resources org.springframework.batch.core.launch.support.CommandLineJobRunner classpath:/launch-context.xml loadPersonnelInfo
+javac -Dfile.encoding=UTF-8 /irdb/src/main/java/jp/co/batch/step/reader/SimpleReader.java
+
+
