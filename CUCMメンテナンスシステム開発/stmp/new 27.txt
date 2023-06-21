@@ -1,0 +1,12 @@
+<bean id="commandLineJobRunner" class="org.springframework.batch.core.launch.support.CommandLineJobRunner" p:jobLauncher-ref="jobLauncher" />
+
+<bean id="loadPersonnelInfoJob" class="org.springframework.batch.core.JobParametersIncrementer" />
+
+<bean id="loadPersonnelInfoJobParameters" class="org.springframework.batch.core.JobParameters">
+    <constructor-arg>
+        <map>
+            <entry key="jobName" value="loadPersonnelInfo" />
+            <!-- 任意の追加のジョブパラメータをここに追加 -->
+        </map>
+    </constructor-arg>
+</bean>
