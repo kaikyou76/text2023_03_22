@@ -130,8 +130,30 @@ UPDATE batch_step_execution_context
 SET short_context = E'\\x' || encode(your_value::bytea, 'hex');
 
 mvn clean install
+
 jar tf /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar | grep CommandLineJobRunner
 jar tf /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar
+
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <import resource="classpath:/job/loadPersonnelInfo.xml" />
+
+    <bean id="jobLauncher" class="org.springframework.batch.core.launch.JobLauncher" />
+
+    <bean id="commandLineJobRunner" class="org.springframework.batch.core.launch.support.CommandLineJobRunner"
+          p:jobLauncher-ref="jobLauncher" />
+
+    <!-- その他の設定やジョブ定義 -->
+
+</beans>
+
+
+
+java -Dfile.encoding=UTF-8 -cp /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar:/irdb/src/main/resources org.springframework.batch.core.launch.support.CommandLineJobRunner classpath:/launch-context.xml loadPersonnelInfo
 
 
 java -Dfile.encoding=UTF-8 -cp /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar:/irdb/src/main/resources org.springframework.batch.core.launch.support.CommandLineJobRunner classpath:/launch-context.xml loadPersonnelInfo
