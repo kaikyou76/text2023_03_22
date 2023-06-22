@@ -1,0 +1,37 @@
+<!-- 作业仓库 -->
+    <job-repository id="jobRepository" data-source="dataSource"
+        transaction-manager="transactionManager" isolation-level-for-create="SERIALIZABLE"
+        table-prefix="BATCH_" max-varchar-length="1000"
+    />
+    
+    <!-- 作业调度器 -->
+    <bean:bean id="jobLauncher" 
+        class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <bean:property name="jobRepository" ref="jobRepository"/>
+    </bean:bean>
+         通过这个类 可以在job被加载后加入注册。然后被获取
+    <bean:bean class="org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor">
+        <bean:property name="jobRegistry" ref="jobRegistry" />
+    </bean:bean>
+    
+    <bean:bean id="jobRegistry"   job注册
+      class="org.springframework.batch.core.configuration.support.MapJobRegistry" />
+    
+    <!-- 事务管理器 -->
+    <bean:bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <bean:property name="dataSource" ref="dataSource" />
+    </bean:bean>
+    
+    <!-- 数据源 -->
+    <bean:bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+          <bean:property name="driverClassName">
+               <bean:value>com.mysql.jdbc.Driver</bean:value>
+          </bean:property>
+          <bean:property name="url">
+               <bean:value>jdbc:mysql://127.0.0.1:3306/test1289</bean:value>
+          </bean:property>
+          <bean:property name="username" value="root"></bean:property>
+          <bean:property name="password" value="000000"></bean:property>
+     </bean:bean>
+</bean:beans>构造controlller
+ <bean class="com.juxtapose.example.ch04.web.JobLauncherController">		<constructor-arg ref="jobLauncher" />		<constructor-arg ref="jobRegistry" />	</bean></beans>
