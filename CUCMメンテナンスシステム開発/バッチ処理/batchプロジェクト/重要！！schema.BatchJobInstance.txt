@@ -160,3 +160,10 @@ java -Dfile.encoding=UTF-8 -cp /d/workspace/irdb/target/irdb-0.0.1-SNAPSHOT.jar:
 javac -Dfile.encoding=UTF-8 /irdb/src/main/java/jp/co/batch/step/reader/SimpleReader.java
 
 
+java classpath "/d/workspace/irdb/*;irdb-0.0.1-SNAPSHOT.jar" org.springframework.batch.core.launch.support.CommandLineJobRunner classpath:/launch-context.xml loadPersonnelInfo
+
+java -cp "/d/workspace/irdb/*;irdb-0.0.1-SNAPSHOT.jar" org.springframework.batch.core.launch.support.CommandLineJobRunner classpath:/launch-context.xml loadPersonnelInfo
+
+
+
+
