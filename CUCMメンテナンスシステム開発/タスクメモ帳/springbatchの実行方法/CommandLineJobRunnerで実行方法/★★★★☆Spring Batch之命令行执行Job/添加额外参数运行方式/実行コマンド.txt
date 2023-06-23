@@ -1,0 +1,5 @@
+
+java -classpath "target/dependency-jars/*;target/spring-batch-1.0-SNAPSHOT.jar" org.springframework.batch.core.launch.support.CommandLineJobRunner demo8/job/demo8-job.xml billJob
+
+添加额外参数运行方式
+java -classpath "target/dependency-jars/*;target/spring-batch-1.0-SNAPSHOT.jar" org.springframework.batch.core.launch.support.CommandLineJobRunner demo8/job/demo8-job.xml billJob inputResource(string)=demo8/data/demo8-inputFile2.csv outputResource(string)=file:src/main/resources/demo8/data/demo8-outputFile2.csv date(string)=2021/12/06

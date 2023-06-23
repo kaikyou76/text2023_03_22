@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+ 
+    <!--定义作业仓库 Job执行期间的元数据存储在内存中-->
+    <bean id="jobRepository" class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean"/>
+ 
+    <!--定义作业调度器，用来启动job-->
+    <bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <!--注入jobRepository-->
+        <property name="jobRepository" ref="jobRepository"/>
+    </bean>
+ 
+    <!--定义事务管理器，用于Spring Batch框架中对数据操作提供事务能力-->
+    <bean id="transactionManager" class="org.springframework.batch.support.transaction.ResourcelessTransactionManager"/>
+ 
+    <!--读取信用卡账单文件，CSV 格式-->
+    <!--使用FlatFileItemReader读文本文件-->
+    <bean id="csvItemReader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
+        <!--指定读取的资源文件-->
+        <property name="resource" value="classpath:demo8/data/demo8-inputFile.csv"/>
+        <!--通过lineMapper把文本中的一行转换为领域对象creditBill-->
+        <property name="lineMapper">
+            <bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+                <!--lineTokenizer定义文本中每行的分隔符号-->
+                <property name="lineTokenizer" ref="lineTokenizer"/>
+                <!--fieldSetMapper定义了转换结果映射,即具体映射到哪个Java类对象-->
+                <property name="fieldSetMapper">
+                    <bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper">
+                        <property name="prototypeBeanName" value="creditBill"/>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+    </bean>
+ 
+    <!--lineTokenizer-->
+    <bean id="lineTokenizer" class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+        <!--按","符号对行进行切割-->
+        <property name="delimiter" value=","/>
+        <!--属性名称列表,将切割后的行按顺序投入-->
+        <property name="names">
+            <list>
+                <value>accountID</value>
+                <value>name</value>
+                <value>amount</value>
+                <value>date</value>
+                <value>address</value>
+            </list>
+        </property>
+    </bean>
+ 
+    <!--注入实体类-->
+    <bean id="creditBill" class="com.xj.demo8.CreditBill" scope="prototype"></bean>
+ 
+    <!--数据处理类-->
+    <bean id="creditBillProcessor" class="com.xj.demo8.CreditBillProcessor" scope="step"></bean>
+ 
+    <!--写信用卡账单文件，CSV格式-->
+    <bean id="csvItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter" scope="step">
+        <!--要写入的文件位置,因为[classpath:]不是一个具体的目录,这里应当用[file:](从项目根目录开始)指明输出位置-->
+        <property name="resource" value="file:src/main/resources/demo8/data/demo8-outputFile.csv"/>
+        <!--[lineAggregator成员]指明行聚合器,用来将对象输出到文件时构造文件中的每行的格式-->
+        <property name="lineAggregator">
+            <!--这里使用Spring Batch自带的DelimitedLineAggregator来作为行聚合器(可以拼接一个个属性形成行)-->
+            <bean class="org.springframework.batch.item.file.transform.DelimitedLineAggregator">
+                <!--使用","拼接-->
+                <property name="delimiter" value=","/>
+                <!--fieldExtractor成员用来将Java类的属性组成的数组拼接成行字符串-->
+                <property name="fieldExtractor">
+                    <bean class="org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor">
+                        <property name="names" value="accountID,name,amount,date,address">
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+    </bean>
+</beans>

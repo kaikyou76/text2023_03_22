@@ -1,0 +1,1 @@
+java -classpath "target/dependency-jars/*;target/spring-batch-1.0-SNAPSHOT.jar" org.springframework.batch.core.launch.support.CommandLineJobRunner demo8/job/demo8-job.xml billJob
