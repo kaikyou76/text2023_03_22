@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="jp.co.netmarks.batch.persistence.LoadPersonnelMapper">
-  
+<mapper namespace="jp.co.batch.persistence.LoadStaffMapper">
+
   <update id="vacuum">
     VACUUM (VERBOSE, ANALYZE) biz_employee;
     VACUUM (VERBOSE, ANALYZE) biz_shift;
@@ -11,19 +11,19 @@
     VACUUM (VERBOSE, ANALYZE) app_user;
     VACUUM (VERBOSE, ANALYZE) r_user_section;
   </update>
-  
+
   <!-- 閾値取得 -->
   <select id="selectThreshold" parameterType="Map" resultType="Map">
     SELECT threshold_value FROM threshold LIMIT 1
   </select>
-  
+
   <!-- 閾値(入社)取得 -->
   <select id="selectEnterEmployee" resultType="Map">
     SELECT DISTINCT employee_code
     FROM biz_employee
     WHERE employee_code NOT IN (SELECT biz_employee_id FROM app_user)
   </select>
-  
+
   <select id="selectEnterCount" resultType="int">
     SELECT COUNT(1) FROM (
     SELECT DISTINCT employee_code
@@ -31,7 +31,7 @@
     WHERE employee_code NOT IN (SELECT biz_employee_id FROM app_user)
     ) AS EnterCnt
   </select>
-  
+
   <!-- 閾値(退社)取得 -->
   <select id="selectRetireEmployee" resultType="Map">
     SELECT DISTINCT biz_employee_id
@@ -39,7 +39,7 @@
     WHERE biz_employee_id NOT IN (SELECT employee_code FROM biz_employee)
       AND app_user.enabled_shared_use != '1'
   </select>
-  
+
   <select id="selectRetireCount" resultType="int">
     SELECT COUNT(1) FROM (
     SELECT DISTINCT app_user_id
@@ -48,11 +48,11 @@
       AND app_user.enabled_shared_use != '1'
     ) AS RetireCnt
   </select>
-  
+
   <!-- 閾値(異動)取得 -->
-  <select id="selectChangeEmployee" resultType="Map"> 
+  <select id="selectChangeEmployee" resultType="Map">
     select A.biz_employee_id,
-    R.company_d, 
+    R.company_d,
     R.section_id
     from app_user A,
     r_user_section R
@@ -84,24 +84,17 @@
     department_code
     from biz_employee)
     ) as ChangeCnt
-  </select> 
+  </select>
 
   <insert id="insertBizOrganization" parameterType="Map">
-    insert into biz_organization
-    values(#{ORGANIZATION_CODE}, #{ORGANIZATION_NAME}, #{ORGANIZATION_NUMBER},
-    #{ORGANIZATION_ABBREVIATED_NAME}, #{PRINT_ORDER}, #{CLASS_SALES}, #{CLASS_DATA_INPUT}, #{UPDATE_DATE})
+    insert into tmp_integratedid_organization
+    values(#{ORGANIZATION_CD}, #{ORGANIZATION_NM}, #{ORGANIZATION_NO},
+    #{ORGANIZATION_ABBREVIATED_NM}, #{PRINT_ORDER}, #{CLASS_SALES}, #{CLASS_DATA_INPUT}, #{UPDATE_DATE})
   </insert>
-  <insert id="insertBizShift" parameterType="Map">
-    insert into biz_shift
-    values(#{OLD_BRANCH_CODE}, #{OLD_COMPANY_CODE}, #{OLD_DEPARTMENT_CODE}, #{NEW_BRANCH_CODE}, #{NEW_COMPANY_CODE}, #{NEW_DEPARTMENT_CODE}) 
-  </insert>
+
   <!-- 取入前削除 -->
-  <delete id="deleteBizShift" parameterType="Map">
-    delete from biz_shift;
+  <delete id="deleteBizOrganization" parameterType="Map">
+    delete from tmp_integratedid_organization;
   </delete>
-  <delete id="deleteBizAD" parameterType="Map">
-    delete from biz_ad;
-  </delete>
- 
-  
+
 </mapper>

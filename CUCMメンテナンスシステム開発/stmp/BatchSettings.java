@@ -1,36 +1,12 @@
-/*
- * Copyright (c) 2014, NET MARKS COMPANY, LIMITED All Rights Reserved.
- *
- * BatchSettings.java
- *
- * @date 2013/09/12
- * @version 1.0
- * @author KSC Hiroaki Endo
- */
-
-package jp.co.ksc.batch.util;
+package jp.co.batch.util;
 
 import java.io.Serializable;
 import java.util.Properties;
 
-import jp.co.ksc.batch.exception.BatRuntimeException;
-import org.springframework.beans.factory.annotation.Autowired;
+import jp.co.batch.exception.BatRuntimeException;
 
-/**
- * バッチの挙動に関する設定を保持するクラス
- *
- * <pre>
- * ★ バッチの挙動に関する設定を保持するクラス
- * &lt;MODIFICATION HISTORY&gt;
- * 1.0 2013/09/12 KSC Hiroaki Endo
- * </pre>
- *
- * @author KSC Hiroaki Endo
- * @version 1.0 2013/09/12
- */
 public class BatchSettings implements Serializable {
 
-    @Autowired
     private Properties props;
     private String osType = "Win32";
 
@@ -54,9 +30,17 @@ public class BatchSettings implements Serializable {
     }
 
     /**
-     * ★ コンストラクタ
+     * 引数なしコンストラクタ
      */
     public BatchSettings() {
+        this(loadProperties());
+    }
+
+    private static Properties loadProperties() {
+        // プロパティファイルの読み込み処理を実装する
+        Properties properties = new Properties();
+        // プロパティファイルをロードするコードを追加する
+        return properties;
     }
 
     /**
@@ -78,7 +62,7 @@ public class BatchSettings implements Serializable {
     public String getLockFile() {
         String value = props.getProperty("LockFile." + osType);
         if (value == null || value.equals("")) {
-            throw new BatRuntimeException("environment.properties LockFile の定義がありません。");
+        	throw new BatRuntimeException("プロパティファイルが正しくロードされていません。");
         }
         return value;
     }
@@ -91,11 +75,10 @@ public class BatchSettings implements Serializable {
     public String getInputDir() {
         String value = props.getProperty("InputDir." + osType);
         if (value == null || value.equals("")) {
-            throw new BatRuntimeException("environment.properties InputDir.");
+            throw new BatRuntimeException("environment.properties InputDir の定義がありません。");
         }
         return value;
     }
-
     /**
      * CSVFTP先ディレクトリの取得
      *
@@ -285,12 +268,7 @@ public class BatchSettings implements Serializable {
         }
         return value;
     }
-	
-/*
- * BatchSettings.java
- *
- * Copyright (c) 2014, NET MARKS COMPANY, LIMITED All Rights Reserved.
- *
+
     /**
      * TmpIntDepartmentのcsvファイル名を取得します。
      *
@@ -339,6 +317,19 @@ public class BatchSettings implements Serializable {
         String value = props.getProperty("DumOrganizationCsvFileName");
         if (value == null || value.equals("")) {
             throw new BatRuntimeException("environment.propertiesにDumOrganizationCsvFileNameの定義がありません。");
+        }
+        return value;
+    }
+
+    /**
+     * TmpOrganizationのcsvファイル名を取得します。
+     *
+     * @return csvファイル名
+     */
+    public String getTmpIntOrganizationCsvFileName() {
+        String value = props.getProperty("TmpIntOrganizationCsvFileName");
+        if (value == null || value.equals("")) {
+            throw new BatRuntimeException("environment.propertiesにTmpOrganizationCsvFileNameの定義がありません。");
         }
         return value;
     }
@@ -426,8 +417,8 @@ public class BatchSettings implements Serializable {
      *
      * @return BizOrganizationCsvHeader
      */
-    public String getBizOrganizationCsvHeader() {
-        String value = props.getProperty("BizOrganizationCsvHeader");
+    public String getTmpBizOrganizationCsvHeader() {
+        String value = props.getProperty("TmpBizOrganizationCsvHeader");
         if (value == null || value.equals("")) {
             throw new BatRuntimeException("environment.propertiesにBizOrganizationCsvHeadersの定義がありません。");
         }
@@ -435,49 +426,17 @@ public class BatchSettings implements Serializable {
     }
 
     /**
-     * BizDepartment@Csv Headerを取得
-     *
-     * @return BizDepartmentCsvHeader
-     */
-    public String getBizDepartmentCsvHeader() {
-        String value = props.getProperty("BizDepartmentCsvHeader");
-        if (value == null || value.equals("")) {
-            throw new BatRuntimeException("environment.propertiesにBizDepartmentCsvHeaderの定義がありません。");
-        }
-        return value;
-    }
-	
-    /**
      * BizOrganizationのテーブル名を取得
      * @return BizOrganizationのテーブル名
      */
-    public String getBizOrganizationTableName() {
-        String value = props.getProperty("BizOrganizationTableName");
+    public String getTmpBizOrganizationTableName() {
+        String value = props.getProperty("TmpBizOrganizationTableName");
         if (value == null || value.equals("")) {
             throw new BatRuntimeException("environment.propertiesにBizOrganizationTableNameの定義がありません。");
         }
         return value;
     }
 
-    /**
-     * BizDepartmentのテーブル名を取得
-     * @return BizDepartmentのテーブル名
-     */
-    public String getBizDepartmentTableName() {
-        String value = props.getProperty("BizDepartmentTableName");
-        if (value == null || value.equals("")) {
-            throw new BatRuntimeException("environment.propertiesにBizDepartmentTableNameの定義がありません。");
-        }
-        return value;
-    }
-
-
-
-	
-	
-	
 }
-
-
 
 

@@ -412,8 +412,20 @@ public class LoadPersonnelInfoLogic {
             throw e;
         }
     }
-
-    private Map<String, Object>[] readBizCsv(String todayCsvFileName, String[] csvHeader)
+	
+//*********************************
+// 内部処理メソッド
+//*********************************
+/**
+* 内部処理メイン
+*
+*@param todayCsvFileName CSV)71K
+*@param csvHeader A
+*@return 読み込んだ csvの内容
+*@throws IOException
+*@throws CSVException
+*/    
+private Map<String, Object>[] readBizCsv(String todayCsvFileName, String[] csvHeader)
             throws IOException, CSVException {
         CSVUtil csvUtil = new CSVUtil(todayCsvFileName);
 

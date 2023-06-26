@@ -143,7 +143,33 @@ public class PersonnelInfoDAO {
     
     public List<Map<String, Object>> getEnterEmployeeList() throws SQLException {
         return lpm.selectEnterEmployee();
-    }	
+    }
+
+	/**
+	*BizOrganizationの削除
+	*@throws SQLException
+	*/
+	public void deleteBizOrganization() throws SQLException {
+		try {
+			Ipm.deleteDumOrganization();
+		} catch (Exception e) {
+			log.warn("BIZ_ORGANIZATION 削除エラー:DUM_ORGANIZATION");
+			throw e;
+		}
+	}
+
+	/**
+	*BizDepartmentの削除
+	*@throws SQLException
+	*/
+	public void deleteBizDepartment() throws SQLException {
+		try {
+			Ipm.deleteDumDepartment();
+		} catch (Exception e) {
+			log.warn("BIZ_DEPARTMENT 削除エラー:DUM_DEPARTMENT");
+			throw e;
+		}
+	}	
 
 }
 
