@@ -1,0 +1,6 @@
+organization_cd,company_cd,department_cd,department_nm,employee_cd,employee_nm_kanji,employee_nm_kana,executive_post_cd,post_lineage_cd,class,sex_cd,birthday,mail_address,assign_grade,class_tel_addressbook,class_temporary_transfer,mail_address_automa_de_flg,class_data_input,update_date
+12300A00099H0000000,123,00123,TEST(TEST),1234567,田中　一郎,タナカ　イチロウ,101,12,1231,1,12312123, 12312312,0231231@test.co.jp,12,1,1,1,12,20230125123123
+2456789511454547000,001,32561,1課2組,3256101,山田 太郎,ヤマダ タロウ,201,23,2341,1,19981231,test@test.com,11,1,0,0,32,20230609123000
+7758125845525575000,001,33785,aフィート,3378501,佐藤 花子,サトウ ハナコ,301,33,3341,2,19991130,hoge@example.com,12,0,0,0,32,20230715180000
+5684558558588520000,001,92402,北海,9240201,鈴木 次郎,スズキ ジロウ,401,42,2341,1,19991015,fuga@example.com,13,0,0,0,54,20231224234500
+3456789045678990000,002,22123,営業部,2212301,高橋 三郎,タカハシ サブロウ,101,12,1231,1,20010405,test@example.com,11,1,1,1,12,20231231235959
