@@ -1,0 +1,9 @@
+$ git status   // 現在の変更状態を確認
+$ git add <ファイル名>   // 新作成ファイルをステージングエリアに追加
+$ git commit -m "新作成ファイルを追加"   // コミットメッセージを記述してコミット
+$ git fetch origin master:master   // リモートブランチ「master」の最新情報を取得してローカルの「master」ブランチを更新
+$ git checkout master   // ローカルの「master」ブランチに切り替え
+$ git merge origin/master   // リモートブランチ「master」をマージ
+$ git checkout feature/#1_kaikyou   // ローカルの「feature/#1_kaikyou」ブランチに切り替え
+$ git merge master   // ローカルの「master」ブランチをマージ
+$ git push origin feature/#1_kaikyou:master   // 「feature/#1_kaikyou」ブランチの変更を「master」ブランチにプッシュ

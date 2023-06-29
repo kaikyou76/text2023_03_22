@@ -1,0 +1,3 @@
+$ git add <ファイル名>   // 新作成ファイルをステージングエリアに追加
+$ git commit -m "新作成ファイルを追加"   // コミットメッセージを記述してコミット
+$ git push origin feature/#1_kaikyou:master
