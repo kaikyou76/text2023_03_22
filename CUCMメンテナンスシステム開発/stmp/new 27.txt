@@ -1,12 +1,14 @@
-<bean id="commandLineJobRunner" class="org.springframework.batch.core.launch.support.CommandLineJobRunner" p:jobLauncher-ref="jobLauncher" />
+SELECT
+    company_cd,
+    department_cd
+FROM
+    tmp_integratedid_department
+WHERE
+    (company_cd, department_cd) NOT IN (
+        SELECT
+            company_cd,
+            LPAD(section_cd, 5, '0')
+        FROM
+            mst_section
+    );
 
-<bean id="loadPersonnelInfoJob" class="org.springframework.batch.core.JobParametersIncrementer" />
-
-<bean id="loadPersonnelInfoJobParameters" class="org.springframework.batch.core.JobParameters">
-    <constructor-arg>
-        <map>
-            <entry key="jobName" value="loadPersonnelInfo" />
-            <!-- 任意の追加のジョブパラメータをここに追加 -->
-        </map>
-    </constructor-arg>
-</bean>
