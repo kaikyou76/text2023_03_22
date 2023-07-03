@@ -346,29 +346,10 @@ public class LoadPersonnelInfoLogic {
         if (!backupDir.exists()) {
             backupDir.mkdirs();
         }
-    }
-
-
-    Calendar cal = Calendar.getInstance();
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-    String ymdhms = sdf.format(cal.getTime());
-
-    public void csvFileRename(BatchSettings props) throws IOException {
-        String impcsvPath = props.getCsvFtpDir();
-        String impcmpcsvPath = props.getInputCompDir();
-        String[] impcsv = {
-            props.getEofAd(),
-            props.getEofAm(),
-            props.getBizAdCsvFileName(),
-            props.getBizDepartmentCsvFileName(),
-            props.getBizEmployeeCsvFileName(),
-            props.getBizOrganizationCsvFileName(),
-            props.getBizShiftCsvFileName()
-        };
-        File backupDir = new File(impcmpcsvPath);
-        if (!backupDir.exists()) {
-            backupDir.mkdirs();
-        }
+		
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        String ymdhms = sdf.format(cal.getTime());		
 
         for (int i = 0; i < impcsv.length; i++) {
             String todayCsvFileName = impcsv[i];
@@ -387,6 +368,7 @@ public class LoadPersonnelInfoLogic {
         }
     }
 
+	//退職者リスト出力
     public void retiredUserFileOut(BatchSettings props) throws Exception {
         String outputPath = props.getOutPutRetireDir();
         String retireListNm = props.getRetiredUserFileName();

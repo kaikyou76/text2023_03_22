@@ -169,7 +169,21 @@ public class PersonnelInfoDAO {
 			log.warn("BIZ_DEPARTMENT 削除エラー:DUM_DEPARTMENT");
 			throw e;
 		}
-	}	
+	}
+//***************************************
+//退社リスト出力
+//***************************************
+/**
+*退社リスト出力
+*@退社リスト出力
+*@throws SQLException
+*/
+public Map<String, Object> [] selRetireUser() throws SQLException {
+Map<String, Object>[] records;
+records = lpm.selAllRetireUserList();
+return records;
+}
+	
 
 }
 

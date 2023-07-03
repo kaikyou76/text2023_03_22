@@ -102,6 +102,24 @@
   <delete id="deleteBizAD" parameterType="Map">
     delete from biz_ad;
   </delete>
+  
+<!-- 退社者リスト -->
+<select id="selAllRetireUserList" resultType="Map">
+	select 
+	  app_user.last_name, 
+	  app_user.first_name, 
+	  replace(
+		app_user.telephone_number, '-', ''
+	  ) as telephone_number, 
+	  lower(app_user.last_name) || '_' || lower(app_user.first_name) as full_name 
+	from 
+	  app_user 
+	where 
+	  app_user.deleted = '1' 
+	order by 
+	  app_user.telephone_number
+</select>
+  
  
   
 </mapper>
