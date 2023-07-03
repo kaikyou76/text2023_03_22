@@ -13,18 +13,7 @@ WHERE
     );
 	
 	
-<select id="selAllUserList" resultType="Map">
-    SELECT
-        last_name,
-        first_name
-    FROM
-        trun_user
-    WHERE
-        employee_id IN
-        <foreach item="item" collection="list" open="(" separator="," close=")">
-            #{item}
-        </foreach>
-</select>
+
 
 public Map<String, Object>[] selAllUserList() throws SQLException {
     Map<String, Object>[] users;
@@ -42,6 +31,18 @@ public Map<String, Object>[] selAllUserList() throws SQLException {
     return users;
 }
 
+<select id="selAllUserList" resultType="Map">
+    SELECT
+        last_name,
+        first_name
+    FROM
+        trun_user
+    WHERE
+        employee_id IN
+        <foreach item="item" collection="employeeIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+</select>
 
 	
 
