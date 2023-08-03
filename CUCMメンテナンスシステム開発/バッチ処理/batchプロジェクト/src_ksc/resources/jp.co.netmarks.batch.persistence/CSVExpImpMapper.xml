@@ -1,0 +1,785 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.netmarks.batch.persistence.CSVExpImpMapper">
+
+    <!-- VoiceLogger -->
+    <!-- CSV取込系 -->
+    <select id="selVoiceDN" parameterType="Map" resultType="Map">
+        select cucm_line_id from cucm_line where directory_number = #{directorynumber}
+    </select>
+
+    <select id="selVoiceID" parameterType="Map" resultType="int">
+        select count(1) from voice_logger_association where cucm_line_id = #{cucm_line_id}
+    </select>
+
+    <insert id="insertVoiceLogger" parameterType="Map">
+        insert into voice_logger_association (CUCM_LINE_ID, STATUS_CODE, ASSOCIATE_CODE, LOGGER_DATA, COL5, COL6, COL7, COL8)
+        values (
+            #{CUCM_LINE_ID},
+            #{STATUS_CODE},
+            #{ASSOCIATE_CODE},
+            #{LOGGER_DATA},
+            1,
+            0,
+            now(),
+            now()
+        )
+    </insert>
+
+<!-- Update -->
+<update id="updateVoiceLogger" parameterType="Map">
+    UPDATE voice_logger_association
+    SET
+    status_code = #{STATUS_CODE},
+    associate_code = #{ASSOCIATE_CODE},
+    logger_data = #{LOGGER_DATA},
+    cucm_update_request_flag = 1,
+    deleted = 0,
+    lastupdate_datetime = now()
+    WHERE
+    cucm_line_id = #{CUCM_LINE_ID}
+</update>
+
+<!-- Export -->
+<select id="getVoiceLoggerExp" resultType="Map">
+    SELECT
+        1.directory_number,
+        CASE
+            WHEN v.logger_data = '0' THEN 'none'
+            WHEN v.logger_data = '1' THEN 'all'
+        END AS logger_data
+    FROM
+        cucm_line 1
+        INNER JOIN voice_logger_association v ON 1.cucm_line_id = v.cucm_line_id
+    WHERE
+        1.deleted != '1'
+        AND v.deleted != '1'
+    ORDER BY
+        1.directory_number
+</select>
+
+<!-- Charge Export -->
+<select id="getChargeExp" resultType="Map">
+    SELECT
+        c.branch_id AS ccmgrp,
+        vorg.branch_name AS ccmgrp_nm,
+        c.parent_section_id AS department,
+        c.section_id AS division,
+        vorg.parent_section_name AS department_nm,
+        vorg.child_section_name AS division_nm,
+        1.directory_number AS telnum
+    FROM
+        cucm_line 1
+        INNER JOIN charge_association c ON 1.cucm_line_id = c.cucm_line_id
+        LEFT OUTER JOIN v_organization_level vorg ON (
+            c.branch_id = vorg.branch_id
+            AND c.company_id = vorg.child_company_id
+            AND c.section_id = vorg.child_section_id
+        )
+    WHERE
+        1.deleted = '0'
+        AND c.deleted = '0'
+    ORDER BY
+        ccmgrp, department, division, telnum
+</select>
+
+<!-- CUC Export -->
+<select id="getCUCExp" resultType="Map">
+    SELECT DISTINCT
+        au.last_nm AS last_name,
+        au.first_nm AS first_name,
+        line.directory_no AS directory_no,
+        SUBSTR(be.mail_address, 0, INSTR(be.mail_address, '@')) AS mail_address,
+        'voicemail' AS voicemail
+    FROM
+        trn_cuc_association unity
+        LEFT OUTER JOIN trn_phone phone ON unity.phone_id = phone.phone_id
+        INNER JOIN rel_cucm_user_phone rup ON rup.phone_id = phone.phone_id
+        INNER JOIN trn_user au ON rup.user_id = au.user_id
+        INNER JOIN tmp_integratedid_employee be ON au.biz_employee_id = be.employee_cd
+        INNER JOIN rel_cucm_phone_line rpl ON rpl.phone_id = phone.phone_id
+        INNER JOIN trn_line line ON rpl.line_id = line.line_id
+    WHERE
+        rpl.no = '1'
+        AND line.voice_mail_profile_id IS NOT NULL
+        AND phone.delete_flg = '0'
+        AND rpl.delete_flg = '0'
+        AND rup.delete_flg = '0'
+</select>
+
+<!-- TelDir Export -->
+<select id="getTelDirExp" resultType="Map">
+    SELECT DISTINCT
+        lpad(ru.section_id, 5, '0') AS section_id,
+        a.biz_employee_id,
+        rpl.external_phone_number_mask AS external_phone_number_mask,
+        1.directory_number AS directory_number,
+        coalesce(pg.no, '') AS call_pickup_group_no,
+        a.name_kanji AS name_kanji,
+        rpl.dialin AS dialin,
+        p.company_id AS company_code
+    FROM
+        tel_dir_association t
+        LEFT OUTER JOIN app_user a ON t.app_user_id = a.app_user_id
+        LEFT OUTER JOIN biz_employee be ON (
+            a.biz_employee_id = be.employee_code
+            AND be.executive_post_code != '003'
+        )
+        LEFT OUTER JOIN r_user_section ru ON a.app_user_id = ru.app_user_id
+        LEFT OUTER JOIN r_cucm_user_phone rup ON a.app_user_id = rup.app_user_id
+        LEFT OUTER JOIN cucm_phone p ON rup.cucm_phone_id = p.cucm_phone_id
+        LEFT OUTER JOIN r_cucm_phone_line rpl ON p.cucm_phone_id = rpl.cucm_phone_id
+        LEFT OUTER JOIN cucm_line 1 ON rpl.cucm_line_id = 1.cucm_line_id
+        LEFT OUTER JOIN m_branch mb ON mb.branch_id = p.branch_id
+        LEFT OUTER JOIN m_cluster mc ON mc.cluster_id = mb.cluster_id
+        LEFT OUTER JOIN pickup_group pg ON (
+            pg.cluster_id = mc.cluster_id
+            AND pg.name = 1.call_pickup_group_name
+        )
+    WHERE
+        t.tel_dir_data = '1'
+        AND t.deleted = '0'
+        AND a.deleted = '0'
+        AND p.deleted = '0'
+        AND 1.deleted = '0'
+    ORDER BY
+        section_id, biz_employee_id
+</select>
+
+<!-- AD Export -->
+<select id="getADExp" resultType="Map">
+    SELECT
+        ad.user_logon_name AS user_logon_name,
+        ad.disp_name AS disp_name,
+        ad.last_name AS last_name,
+        ad.first_name AS first_name,
+        ad.mail AS mail,
+        ad.position AS position,
+        li.directory_number AS directory_number
+    FROM
+        biz_ad ad
+        LEFT OUTER JOIN app_user au ON ad.user_logon_name = au.login_id
+        LEFT OUTER JOIN r_cucm_user_phone up ON au.app_user_id = up.app_user_id
+        LEFT OUTER JOIN cucm_phone ph ON up.cucm_phone_id = ph.cucm_phone_id
+        LEFT OUTER JOIN r_cucm_phone_line pl ON ph.cucm_phone_id = pl.cucm_phone_id
+        LEFT OUTER JOIN cucm_line li ON pl.cucm_line_id = li.cucm_line_id
+</select>
+
+<!-- 一覧のエクスポート用の値を取得 (CSV) -->
+<select id="getLineListExp" parameterType="jp.co.ksc.batch.util.BaseConstants" resultType="Map">
+    SELECT
+        COALESCE(v_info.statusName, '') AS statusName,  <!-- ステータス名称 -->
+        COALESCE(v_info.directoryNumber, '') AS directoryNumber,  <!-- 内線番号 -->
+        COALESCE(v_info.dialinNumber, '') AS dialinNumber, <!-- ダイアルイン -->
+        COALESCE(v_info.lineIndex, '') AS lineIndex,  <!-- 連番(LINE) -->
+        COALESCE(v_info.kanjiUserName, '') AS kanjiUserName,  <!-- ユーザ名漢字 -->
+        COALESCE(v_info.sectionUserName, '') AS sectionUserName,  <!-- 店部課名(ユーザ) -->
+        COALESCE(v_info.pickupGroupNo, '') AS pickupGroupNo,  <!-- ピックアップグループ名 -->
+        COALESCE(v_info.voiceMailFlg, '') AS voiceMailFlg,  <!-- ボイスメールフラグ -->
+        COALESCE(v_info.busyDestination, '') AS busyDestination,  <!-- 話中転送先 -->
+        COALESCE(v_info.chargeAssociationBranchId, '') AS chargeAssociationBranchId,  <!-- 課金先(拠点) (オリジナル) -->
+        COALESCE(v_info.chargeAssociationParentSectionId, '') AS chargeAssociationParentSectionId,  <!-- 課金先(親店部課) (オリジナル) -->
+        COALESCE(v_info.chargeAssociationSectionId, '') AS chargeAssociationSectionId,  <!-- 課金先(子店部課) (オリジナル) -->
+        COALESCE(v_info.chargeRemarks, '') AS chargeRemarks, <!-- 備考(課金) (オリジナル) -->
+        COALESCE(v_info.loggerDataName, '') AS loggerDataName, <!-- LOGGER DATA名 -->
+        COALESCE(v_info.telDirData, '') AS telDirData,  <!-- TEL DIR DATA -->
+        COALESCE(v_info.telTypeModel, '') AS telTypeModel,  <!-- 電話機種名 -->
+        COALESCE(v_info.macAddress, '') AS macAddress,  <!-- MACアドレス -->
+        COALESCE(v_info.phoneButtonTemplete, '') AS phoneButtonTemplete,  <!-- PhoneButtonTemplate名 -->
+        COALESCE(v_info.branchTelName, '') AS branchTelName,  <!-- 抛点名(電話機 -->
+        COALESCE(v_info.sectionTelName, '') AS sectionTelName,  <!-- 店部課名(電話機 -->
+        COALESCE(v_info.callingSearchSpaceName, '') AS callingSearchSpaceName,  <!-- コーリングサーチスペース名 -->
+        COALESCE(v_info.addonModuleName1, '') AS orgAddonModuleName1,  <!-- 設定モジュール 1 -->
+        COALESCE(v_info.addonModuleName2, '') AS orgAddonModuleName2,  <!-- 設定モジュール2 -->
+        COALESCE(v_info.ringSettingName, '') AS orgRingSettingName,  <!-- 鳴動設定 -->
+        COALESCE(v_info.telLineRemarks, '') AS telLineRemarks,  <!-- 電話備考 -->
+        COALESCE(v_info.lineTextLabel, '') AS lineTextLabel,  <!-- LINE TEXT LABEL -->
+        COALESCE(v_info.noansDestination, '') AS noansDestination, <!-- 不応答転送先 -->
+        COALESCE(v_info.externalPhoneNumberMask, '') AS externalPhoneNumberMask <!-- EXTERNAL PHONE NUMBER MASK -->
+    FROM (
+        <include refid="selectSearchUserAndList"/>
+    ) v_info
+</select>
+
+<!-- ユーザー一覧検索結果用 -->
+<sql id="selectSearchUserAndList">
+    SELECT
+        v_search_info.lineId AS lineId, <!-- LINEID -->
+        v_search_info.lineIndex AS lineIndex, <!-- 連番(LINE) -->
+        v_search_info.pickupGroupName AS pickupGroupName, <!-- ピックアップグループ -->
+        v_search_info.directoryNumber AS directoryNumber, <!-- 内線番号 -->
+        v_search_info.busyDestination AS busyDestination, <!-- 話中転送先 -->
+        v_search_info.noansDestination AS noansDestination, <!-- 不応答転送先 -->
+        v_search_info.loggerData AS loggerData, <!-- 通話録音_LOGGER DATA -->
+        v_search_info.chargeAssociationBranchId AS chargeAssociationBranchId, <!-- 課金_(拠点)ID -->
+        v_search_info.chargeAssociationParentSectionId AS chargeAssociationParentSectionId, <!-- 課金_(親店部課)ID -->
+        v_search_info.chargeAssociationSectionId AS chargeAssociationSectionId, <!-- 課金_(店部課)ID -->
+        v_search_info.lineTextLabel AS lineTextLabel, <!-- LINE TEXT LABEL -->
+        v_search_info.externalPhoneNumberMask AS externalPhoneNumberMask, <!-- EXTERNAL PHONE NUMBER MASK -->
+        v_search_info.dialinNumber AS dialinNumber, <!-- ダイアルイン -->
+        v_search_info.telDirData AS telDirData, <!-- TEL DIR DATA -->
+        v_search_info.userId AS userId, <!-- ユーザID -->
+        v_search_info.kanjiUserName AS kanjiUserName, <!-- ユーザ名漢字 -->
+        v_search_info.kanaUserName AS kanaUserName, <!-- ユーザ名カナ -->
+        v_search_info.companyUserId AS companyUserId, <!-- 会社ID (ユーザー) -->
+        v_search_info.sectionUserId AS sectionUserId, <!-- 店部課ID (ユーザー)-->
+        v_search_info.sectionUserName AS sectionUserName, <!-- 店部課名(ユーザ) -->
+        v_search_info.sharedUse AS sharedUse, <!-- 共有ユーザー区分 -->
+        v_search_info.telId AS telId, <!-- 電話ID -->
+        v_search_info.telTypeModel AS telTypeModel, <!-- 電話機種名 -->
+        v_search_info.macAddress AS macAddress, <!-- MACアドレス -->
+        v_search_info.callingSearchSpaceName AS callingSearchSpaceName, <!-- コーリングサーチスペース名 -->
+        v_search_info.branchTelId AS branchTelId, <!-- 抛点ID(電話機) -->
+        v_search_info.companyTelId AS companyTelId, <!-- 会社ID(電話機) -->
+        v_search_info.sectionTelId AS sectionTelId, <!-- 店部課ID(電話機) -->
+        v_search_info.phoneButtonTemplete AS phoneButtonTemplete, <!-- ボタンテンプレート名 -->
+        v_search_info.branchTelName AS branchTelName, <!-- 拠点名 -->
+        v_search_info.sectionTelName AS sectionTelName, <!-- 店部課名 -->
+        v_search_info.statusCode AS statusCode, <!-- ステータスコード -->
+        v_search_info.statusName AS statusName, <!-- ステータス名称 -->
+        v_search_info.clusterId AS clusterId, <!-- ステータスID -->
+        v_search_info.voiceMailFlg AS voiceMailFlg, <!-- ボイスメールフラグ -->
+        v_search_info.telLineRemarks AS telLineRemarks, <!-- 電話備考 -->
+        v_search_info.chargeRemarks AS chargeRemarks, <!-- 課金備考 -->
+        v_search_info.addonModuleNamel AS addonModuleName1, <!-- 設定モジュール 1 -->
+        v_search_info.addonModuleName2 AS addonModuleName2, <!-- 設定モジュール2 -->
+        v_search_info.ringSettingName AS ringSettingName, <!-- 鳴動設定 -->
+        v_search_info.pickupGroupNo AS pickupGroupNo, <!-- ピックアップグループ名 -->
+        v_search_info.loggerDataName AS loggerDataName, <!-- LOGGER DATA名 -->
+        ROW_NUMBER() OVER (ORDER BY (${DEFAULT_SORT})) AS ROW_NUMBER, <!-- ソート順 -->
+        COALESCE(v_phone_user.status, '0') AS jointuse,
+     CASE
+        WHEN COALESCE(v_phone_user.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ユーザー -->
+            AND COALESCE(v_user_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ユーザー 1-1 電話 -->
+            AND COALESCE(v_line_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ライン 1-1 電話 -->
+            AND COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ライン -->
+            AND COALESCE(v_search_info.sharedUse, #{ENABLED_SHARED_USE_PRIVATE}) = #{ENABLED_SHARED_USE_PRIVATE} <!-- 共用電話 0 -->
+            THEN #{TEL_USAGES_DEFAULT} <!-- 一般紐付け -->
+        WHEN COALESCE(v_phone_user.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_MANY} <!-- 電話 1-N ユーザー -->
+            AND COALESCE(v_user_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ユーザー 1-1 電話 -->
+            AND COALESCE(v_line_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ライン 1-1 電話 -->
+            AND COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ライン -->
+            AND COALESCE(v_search_info.sharedUse, #{ENABLED_SHARED_USE_PRIVATE}) = #{ENABLED_SHARED_USE_PRIVATE} <!-- 共用電話 0 -->
+            THEN #{TEL_USAGES_COMMON_USER} <!-- 共有ユーザー -->
+        WHEN COALESCE(v_phone_user.status, #{TEL_USAGES_STATUS_NOTHING}) IN (#{TEL_USAGES_STATUS_SINGLE}, #{TEL_USAGES_STATUS_NOTHING}) <!-- 電話 1-1or0 ユーザー -->
+            AND COALESCE(v_user_tel.status, #{TEL_USAGES_STATUS_NOTHING}) IN (#{TEL_USAGES_STATUS_SINGLE}, #{TEL_USAGES_STATUS_MANY}) <!-- ユーザー 1or0-1 電話 -->
+            AND COALESCE(v_line_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_MANY} <!-- ライン 1-N 電話 -->
+            AND COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ライン -->
+            AND COALESCE(v_search_info.sharedUse, #{ENABLED_SHARED_USE_PRIVATE}) = #{ENABLED_SHARED_USE_PRIVATE} <!-- 共用電話 0 -->
+            THEN #{TEL_USAGES_SHARED_LINE} <!-- シェアードライン -->
+        WHEN COALESCE(v_phone_user.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_NOTHING} <!-- 電話 1-1 ユーザー -->
+            AND COALESCE(v_user_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_MANY} <!-- ユーザー 1-N 電話 -->
+            AND COALESCE(v_line_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ライン 1-1 電話 -->
+            AND COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ライン -->
+            AND COALESCE(v_search_info.sharedUse, #{ENABLED_SHARED_USE_PRIVATE}) = #{ENABLED_SHARED_USE_PRIVATE} <!-- 共用電話 0 -->
+            THEN #{TEL_USAGES_MULTI_DEVICE} <!-- マルチデバイス -->
+        WHEN COALESCE(v_phone_user.status, #{TEL_USAGES_STATUS_NOTHING}) IN (#{TEL_USAGES_STATUS_SINGLE}, #{TEL_USAGES_STATUS_NOTHING}) <!-- 電話 1-1or0 ユーザー -->
+            AND COALESCE(v_user_tel.status, #{TEL_USAGES_STATUS_NOTHING}) IN (#{TEL_USAGES_STATUS_SINGLE}, #{TEL_USAGES_STATUS_NOTHING}) <!-- ユーザー 1or0-1 電話 -->
+            AND COALESCE(v_line_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ライン 1-1 電話 -->
+            AND COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_MANY} <!-- 電話 1-N ライン -->
+            AND COALESCE(v_search_info.sharedUse, #{ENABLED_SHARED_USE_PRIVATE}) = #{ENABLED_SHARED_USE_PRIVATE} <!-- 共用電話 0 -->
+            THEN #{TEL_USAGES_MULTI_LINE} <!-- マルチライン -->
+        WHEN COALESCE(v_phone_user.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ユーザー -->
+            AND COALESCE(v_user_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ユーザー 1-1 電話 -->
+            AND COALESCE(v_line_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ライン 1-1 電話 -->
+            AND COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ライン -->
+            AND COALESCE(v_search_info.sharedUse, #{ENABLED_SHARED_USE_PRIVATE}) = #{ENABLED_SHARED_USE_SHARE} <!-- 共用電話 1 -->
+            THEN #{TEL_USAGES_SHARED_TEL} <!-- 共用電話機 -->
+        WHEN COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_NOTHING} <!-- 電話 0-0 ライン -->
+            THEN #{TEL_USAGES_NOT_LINK_TEL} <!-- 電話機と紐付いていないユーザ -->
+        WHEN COALESCE(v_phone_user.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_NOTHING} <!-- 電話 1-0 ユーザー -->
+            AND COALESCE(v_user_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_NOTHING} <!-- ユーザー 0-1 電話 -->
+            AND COALESCE(v_line_tel.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- ライン 1-1 電話 -->
+            AND COALESCE(v_tel_line.status, #{TEL_USAGES_STATUS_NOTHING}) = #{TEL_USAGES_STATUS_SINGLE} <!-- 電話 1-1 ライン -->
+            AND COALESCE(v_search_info.sharedUse, #{ENABLED_SHARED_USE_PRIVATE}) = #{ENABLED_SHARED_USE_PRIVATE} <!-- 共用電話 1 -->
+            THEN #{TEL_USAGES_NOT_LINK_USER} <!-- 部内在庫電話機 -->
+        ELSE #{TEL_USAGES_MANY} <!-- 複数存在した場合 -->
+    END AS telUsagesStatus <!-- ユーザー×電話×ラインのパターンステータス -->
+        FROM
+        (
+            <include refid="selectUserAndTelList"/>
+        ) v_search_info
+    LEFT OUTER JOIN
+        (
+            SELECT
+                r_cucm_user_phone.cucm_phone_id AS telid,
+                CASE
+                    WHEN count(r_cucm_user_phone.cucm_phone_id) <![CDATA[ <= ]]> 1 THEN #{TEL_USAGES_STATUS_SINGLE}
+                    ELSE #{TEL_USAGES_STATUS_MANY}
+                END AS status
+            FROM
+                r_cucm_user_phone <!-- ユーザー　電話 -->
+            WHERE
+                r_cucm_user_phone.deleted = #{COM_FLG_OFF}
+            GROUP BY
+                r_cucm_user_phone.cucm_phone_id
+        ) v_phone_user
+        ON v_search_info.telId = v_phone_user.telid
+    LEFT OUTER JOIN
+        (
+            SELECT
+                r_cucm_phone_line.cucm_line_id AS lineId,
+                CASE
+                    WHEN count(r_cucm_phone_line.cucm_line_id) <![CDATA[ <= ]]> 1 THEN #{TEL_USAGES_STATUS_SINGLE}
+                    ELSE #{TEL_USAGES_STATUS_MANY}
+                END AS status
+            FROM
+                r_cucm_phone_line <!-- LINE電話 -->
+            WHERE
+                r_cucm_phone_line.deleted = #{COM_FLG_OFF}
+            GROUP BY
+                r_cucm_phone_line.cucm_line_id
+        ) v_line_tel
+        ON v_search_info.lineId = v_line_tel.lineId
+    LEFT OUTER JOIN
+        (
+            SELECT
+                r_cucm_user_phone.app_user_id AS userId,
+                CASE
+                    WHEN count(r_cucm_user_phone.app_user_id) <![CDATA[ <= ]]> 1 THEN #{TEL_USAGES_STATUS_SINGLE}
+                    ELSE #{TEL_USAGES_STATUS_MANY}
+                END AS status
+            FROM
+                r_cucm_user_phone <!-- 電話-ユーザー -->
+            WHERE
+                r_cucm_user_phone.deleted = #{COM_FLG_OFF}
+            GROUP BY
+                r_cucm_user_phone.app_user_id
+        ) v_user_tel
+        ON v_search_info.userId = v_user_tel.userId
+    LEFT OUTER JOIN
+        (
+            SELECT
+                r_cucm_phone_line.cucm_phone_id AS telid,
+                CASE
+                    WHEN count(r_cucm_phone_line.cucm_phone_id) <![CDATA[ <= ]]> 1 THEN #{TEL_USAGES_STATUS_SINGLE}
+                    ELSE #{TEL_USAGES_STATUS_MANY}
+                END AS status
+            FROM
+                r_cucm_phone_line <!-- 電話-LINE -->
+            WHERE
+                r_cucm_phone_line.deleted=#{COM_FLG_OFF}
+            GROUP BY
+                r_cucm_phone_line.cucm_phone_id
+        ) v_tel_line
+        ON v_search_info.telId = v_tel_line.telid
+</sql>
+
+	<!-- ユーザーと電話機一覧 -->
+	<sql id="selectUserAndTelList">
+		SELECT
+		    v_tel_user_info.lineId AS lineId <!-- LINEID -->
+		    , v_tel_user_info.lineIndex AS lineIndex <!-- 連番(LINE) -->
+		    , COALESCE(v_tel_user_info.pickupGroupName, '') AS pickupGroupName <!-- ピックアップグループ -->
+		    , COALESCE(v_tel_user_info.directoryNumber, '') AS directoryNumber <!-- 内線番号 -->
+		    , COALESCE(v_tel_user_info.busyDestination, '') AS busyDestination <!-- 話中転送先 -->
+		    , COALESCE(v_tel_user_info.noansDestination, '') AS noansDestination <!-- 不応答転送先 -->
+		    , COALESCE(v_tel_user_info.loggerData, '') AS loggerData <!-- LOGGER DATA -->
+		    , COALESCE(v_tel_user_info.chargeAssociationBranchId, '') AS chargeAssociationBranchId <!-- 課金 拠点ID -->
+		    , COALESCE(v_tel_user_info.chargeAssociationParentSectionId, '') AS chargeAssociationParentSectionId <!-- 課金 親店部課ID -->
+		    , COALESCE(v_tel_user_info.chargeAssociationSectionId, '') AS chargeAssociationSectionId <!-- 課金_店部課ID -->
+		    , COALESCE(v_tel_user_info.lineTextLabel, '') AS lineTextLabel <!-- LINE TEXT LABEL -->
+		    , COALESCE(v_tel_user_info.externalPhoneNumberMask, '') AS externalPhoneNumberMask <!-- EXTERNAL_PHONE_NUMBER_MAS -->
+		    , COALESCE(v_tel_user_info.dialinNumber, '') AS dialinNumber <!-- ダイアルイン -->
+		    , COALESCE(v_tel_user_info.telDirData, '') AS telDirData <!-- TEL_DIR_DATA -->
+		    , v_tel_user_info.userId AS userId <!-- ユーザーID -->
+		    , v_tel_user_info.kanjiUserName AS kanjiUserName <!-- ユーザ名漢字 -->
+		    , v_tel_user_info.kanaUserName AS kanaUserName <!-- ユーザ名カナ -->
+		    , v_tel_user_info.companyUserId AS companyUserId <!-- 会社ID (ユーザー) -->
+		    , v_tel_user_info.sectionUserId AS sectionUserId <!-- 店部課ID (ユーザー) -->
+		    , v_tel_user_info.userSectionparentPrintorder AS userSectionparentPrintorder <!-- プリント順 (親店部課) -->
+		    , v_tel_user_info.userSectionchildPrintorder AS userSectionchildPrintorder <!-- プリント順(店部課) -->
+		    , v_tel_user_info.userSectionPrintorder AS userSectionPrintorder <!-- プリント順(ユーザ店部課) -->
+		    , v_tel_user_info.userBranchAll AS userBranchAll
+		    , v_tel_user_info.userBranch AS userBranch
+		    , v_tel_user_info.sectionUserName AS sectionUserName <!-- 店部課名 -->
+		    , v_tel_user_info.sharedUse AS sharedUse <!-- 共有ユーザー区分 -->
+		    , v_tel_user_info.telId AS telId <!-- 電話ID -->
+		    , v_tel_user_info.telTypeModel AS telTypeModel <!-- 電話機種名 -->
+		    , v_tel_user_info.macAddress AS macAddress <!-- MACアドレス -->
+		    , COALESCE(v_tel_user_info.callingSearchSpaceName, '') AS callingSearchSpaceName <!-- コーリングサーチスペース名 -->
+		    , COALESCE(v_tel_user_info.baseLocation, '') AS baseLocation <!-- ロケーション名 -->
+		    , COALESCE(v_tel_user_info.baseDp, '') AS baseDp <!-- デバイスプール名 -->
+		    , v_tel_user_info.branchTelId AS branchTelId <!-- 拠点ID(電話機) -->
+		    , v_tel_user_info.companyTelId AS companyTelId <!-- 会社ID(電話機) -->
+		    , v_tel_user_info.sectionTelId AS sectionTelId <!-- 店部課ID(電話機) -->
+		    , v_tel_user_info.phoneButtonTemplete AS phoneButtonTemplete <!-- ボタンテンプレート名 -->
+		    , v_tel_user_info.branchTelName AS branchTelName <!-- 抛点名(電話機) -->
+		    , v_tel_user_info.sectionTelName AS sectionTelName <!-- 店部課名(電話機) -->
+		    , v_tel_user_info.phoneSectionParentPrintorder AS phoneSectionParentPrintorder <!-- プリント順 -->
+		    , v_tel_user_info.phoneSectionChildPrintorder AS phoneSectionChildPrintorder <!-- プリント順(親店部課電話機) -->
+		    , v_tel_user_info.searchSectionName AS searchSectionName <!-- 店部課名(ユーザー店部課) -->
+		    , v_tel_user_info.orgId AS orgId <!-- 組織ID -->
+		    , COALESCE(v_tel_user_info.statusCode, '') AS statusCode <!-- ステータスコード -->
+		    , COALESCE(v_tel_user_info.status, '') AS statusName <!-- ステータス名称 -->
+		    , v_tel_user_info.clusterId AS clusterId <!-- クラスターID -->
+		    , v_tel_user_info.voiceMailFlg AS voiceMailFlg <!-- ボイスメールフラグ -->
+		    , v_tel_user_info.telLineRemarks AS telLineRemarks <!-- 電話備考 -->
+		    , v_tel_user_info.chargeRemarks AS chargeRemarks <!-- 課金備考 -->
+		    , COALESCE(v_tel_user_info.addonModuleName1, '') AS addonModuleName1 <!-- 設定モジュール1 -->
+		    , COALESCE(v_tel_user_info.addonModuleName2, '') AS addonModuleName2 <!-- 設定モジュール2 -->
+		    , COALESCE(v_tel_user_info.ringSettingName, '') AS ringSettingName <!-- 鳴動設定 -->
+		    , COALESCE(v_tel_user_info.pickupGroupNo, '') AS pickupGroupNo <!-- ピックアップグループ名 -->
+		    , COALESCE(v_tel_user_info.loggerDataName, '') AS loggerDataName <!-- LOGGER DATA名 -->
+		FROM
+		     (
+			     <!-- 電話機情報 -->
+	             SELECT
+				    v_cucm_phone_line.lineId AS lineId <!-- LINEID -->
+				    , v_cucm_phone_line.lineIndex AS lineIndex <!-- 連番(LINE) -->
+				    , v_cucm_phone_line.pickupGroupName AS pickupGroupName <!-- ピックアップグループ -->
+				    , v_cucm_phone_line.directoryNumber AS directoryNumber <!-- 内線番号 -->
+				    , v_cucm_phone_line.busyDestination AS busyDestination <!-- 話中転送先 -->
+				    , v_cucm_phone_line.noansDestination AS noansDestination <!-- 不応答転送先 -->
+				    , v_cucm_phone_line.loggerData AS loggerData <!-- LOGGER DATA -->
+				    , v_cucm_phone_line.chargeAssociationBranchId AS chargeAssociationBranchId <!-- 課金挻点ID -->
+				    , v_cucm_phone_line.chargeAssociationParentSectionId AS chargeAssociationParentSectionId <!-- 課金_親店部課ID -->
+				    , v_cucm_phone_line.chargeAssociationSectionId AS chargeAssociationSectionId <!-- 課金店部課ID -->
+				    , v_cucm_phone_line.lineTextLabel AS lineTextLabel <!-- LINE TEXT LABEL -->
+				    , v_cucm_phone_line.externalPhoneNumberMask AS externalPhoneNumberMask <!-- EXTERNAL_PHONE_NUMBER_MAS -->
+				    , v_cucm_phone_line.dialinNumber AS dialinNumber <!-- ダイアルイン -->
+				    , COALESCE(TEL_DIR_ASSOCIATION.TEL_DIR_DATA, '0') AS telDirData <!-- TEL_DIR_DATA -->
+				    , v_cucm_user_phone.userId AS userId <!-- ユーザID -->
+				    , v_cucm_user_phone.kanjiUserName AS kanjiUserName <!-- ユーザ名漢字 -->
+				    , v_cucm_user_phone.kanaUserName AS kanaUserName <!-- ユーザ名カナ -->
+				    , v_cucm_user_phone.companyId AS companyUserId <!-- 会社ID (ユーザー) -->
+				    , v_cucm_user_phone.sectionId AS sectionUserId <!-- 店部課ID (ユーザー) -->
+				    , v_cucm_user_phone.parentPrintorder AS userSectionParentPrintorder <!-- プリント順 (親店部課) -->
+				    , v_cucm_user_phone.childPrintorder AS userSectionChildPrintorder <!-- プリント順(店部課) -->
+				    , v_cucm_user_phone.userSectionPrintorder AS userSectionPrintorder <!-- プリント順(ユーザ店部課) -->
+				    , NULL AS userBranchAll
+				    , NULL AS userBranch
+				    , v_cucm_user_phone.sectionName AS sectionUserName <!-- 店部課名 -->
+				    , v_cucm_user_phone.sharedUse AS sharedUse <!-- 共有ユーザー区分 -->
+				    , CUCM_PHONE.CUCM_PHONE_ID AS telId <!-- 電話ID -->
+				    , CUCM_PHONE.PHONE_PRODUCT_NAME AS telTypeModel <!-- 電話機種名 -->
+				    , CUCM_PHONE.MAC_ADDRESS AS macAddress <!-- MACアドレス -->
+				    , CUCM_PHONE.CALLING_SEARCH_SPACE_NAME AS callingSearchSpaceName <!-- コーリングサーチスペース名 -->
+				    , CUCM_PHONE.LOCATION_NAME AS baseLocation <!-- ロケーション名 -->
+				    , CUCM_PHONE.DEVICE_POOL_NAME AS baseDp <!-- デバイスプール名 -->
+				    , CUCM_PHONE.BRANCH_ID AS branchTelId <!-- 拠点ID(電話機) -->
+				    , CUCM_PHONE.COMPANY_ID AS companyTelId <!-- 会社ID(電話機) -->
+				    , CUCM_PHONE.SECTION_ID AS sectionTelId <!-- 店部課ID(電話機) -->
+				    , CUCM_PHONE.PHONE_BUTTON_TEMPLATE_NAME AS phoneButtonTemplete <!-- ボタンテンプレート名(電話機テンプレート名) -->
+				    , M_BRANCH.BRANCH_NAME AS branchTelName <!-- 抛点名(電話機) -->
+				    , T_SECTION_CHILD.SECTION_NAME AS sectionTelName <!-- 店部課名(電話機) -->
+				    , T_SECTION_CHILD.PRINT_ORDER AS phoneSectionChildPrintorder <!-- プリント順 -->
+				    , T_SECTION_PARENT.PRINT_ORDER AS phoneSectionParentPrintorder <!-- プリント順(親店部課_電話機) -->
+				    , SUBSTRING(v_cucm_user_phone.sectionName, length(v_cucm_user_phone.childSectionName) + 1) AS searchSectionName <!-- 店部課名(ユーザー店部課) -->
+				    , T_SECTION_CHILD.ORG_ID AS orgId <!-- 組織ID -->
+				    , M_CLUSTER.CLUSTER_ID AS clusterId <!-- クラスターID -->
+				    , v_cucm_phone_line.voiceMailFlg AS voiceMailFlg <!-- ボイスメールフラグ -->
+				    , v_cucm_phone_line.telLineRemarks AS telLineRemarks <!-- 電話備考 -->
+				    , v_cucm_phone_line.chargeRemarks AS chargeRemarks <!-- 課金備考 -->
+				    , COALESCE(CUCM_PHONE.ADDON_MODULE_NAME_1, '') AS addonModuleName1 <!-- 設定モジュール 1 -->
+				    , CUCM_PHONE.ADDON_MODULE_NAME_2 AS addonModuleName2 <!-- 設定モジュール2 -->
+				    , v_cucm_phone_line.ringSettingName AS ringSettingName <!-- 鳴動設定 -->
+				    , PICKUP_GROUP.NO AS pickupGroupNo <!-- ピックアップグループ名 -->
+				    , CASE
+				        WHEN v_cucm_phone_line.loggerData = #{LOGGER_DATA_ON} THEN #{LOGGER_DATA_ON_NAME}
+				        ELSE #{LOGGER_DATA_OFF_NAME}
+				    END AS loggerDataName <!-- ロカーテー名 -->
+				    , CASE
+					    WHEN COALESCE(v_cucm_phone_line.lineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- 電話-LINE -->
+					    OR COALESCE(v_cucm_user_phone.userPhoneUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- ユーザ -->
+					    OR cucm_phone.cucm_update_request_flag = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- 電話 -->
+					        #{REFLECTION_WAIT} <!-- 2:反映待 -->
+					    WHEN COALESCE(v_cucm_phone_line.lineErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- 電話-LINE -->
+					    OR COALESCE(v_cucm_user_phone.userPhoneErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- ユーザー -->
+					    OR cucm_phone.error_flg = #{COM_FLG_ON} THEN <!-- 電話 -->
+					        #{REFLECTION_ERROR} <!-- 1:エラー -->
+					    WHEN COALESCE(v_cucm_phone_line.lineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- 電話-LINE -->
+					    OR COALESCE(v_cucm_user_phone.userPhoneUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- ユーザー -->
+					    OR cucm_phone.cucm_update_request_flag = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- 電話 -->
+					        #{REFLECTION_BATCH} <!-- 3:空 -->
+					    WHEN COALESCE(v_cucm_phone_line.lineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- 電話-LINE -->
+					    OR COALESCE(v_cucm_user_phone.userPhoneUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- ユーザー -->
+					    OR cucm_phone.cucm_update_request_flag = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- 電話 -->
+					        #{REFLECTION_WAIT} <!-- 2:反映待 -->
+					    ELSE #{REFLECTION_FINISHED} <!-- 3:反映済 -->
+					END AS statusCode <!-- 反映状況コード -->
+                   , CASE
+					    WHEN COALESCE(v_cucm_phone_line.lineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- 電話-LINE -->
+					    OR COALESCE(V_cucm_user_phone.userPhoneUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- ユーザー -->
+					    OR cucm_phone.cucm_update_request_flag = #{CUCM_UPDATE_FLG_WAIT_2} THEN <!-- 電話 -->
+					        #{REFLECTION_WAIT_NAME} <!--2:反映待 -->
+					    WHEN COALESCE(v_cucm_phone_line.lineErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- 電話-LINE -->
+					    OR COALESCE(v_cucm_user_phone.userPhoneErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userErrorFlg, '0') = #{COM_FLG_ON} THEN <!-- ユーザー -->
+					    OR cucm_phone.error_flg = #{COM_FLG_ON} THEN <!-- 電話 -->
+					        #{REFLECTION_ERROR_NAME} <!--1:エラー -->
+					    WHEN COALESCE(v_cucm_phone_line.lineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- 電話-LINE -->
+					    OR COALESCE(v_cucm_user_phone.userPhoneUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- ユーザー -->
+					    OR cucm_phone.cucm_update_request_flag = #{CUCM_UPDATE_FLG_WAIT_3} THEN <!-- 電話 -->
+					        #{REFLECTION_BATCH_NAME} <!-- 3:空 -->
+					    WHEN COALESCE(v_cucm_phone_line.lineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- LINE -->
+					    OR COALESCE(v_cucm_phone_line.phoneLineUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- 電話-LINE -->
+					    OR COALESCE(v_cucm_user_phone.userPhoneUpdateRequest, '0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- ユーザー電話 -->
+					    OR COALESCE(v_cucm_user_phone.userUpdateRequest,'0') = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- ユーザー -->
+					    OR cucm_phone.cucm_update_request_flag = #{CUCM_UPDATE_FLG_WAIT} THEN <!-- 電話 -->
+					        #{REFLECTION_WAIT_NAME} <!--2:反映待 -->
+					    ELSE
+					        #{REFLECTION_FINISHED_NAME} <!-- 3:反映済 -->
+					END AS status <!-- 反映状態名称 -->
+				FROM
+				    cucm_phone
+				    INNER JOIN(
+				        <!-- ## LINE情報 ## -->
+						SELECT
+						    CUCM_LINE.CUCM_LINE_ID AS lineId, <!-- LINEID -->
+						    CUCM_LINE.CALL_PICKUP_GROUP_NAME AS pickupGroupName, <!-- ピックアップグループ名 -->
+						    CUCM_LINE.DIRECTORY_NUMBER AS directoryNumber, <!-- 内線番号 -->
+						    CUCM_LINE.FWD_BUSY_DESTINATION AS busyDestination, <!-- 話中転送先 -->
+						    CUCM_LINE.FWD_NOANS_DESTINATION AS noansDestination, <!-- 不応答転送先 -->
+						    CUCM_LINE.CUCM_UPDATE_REQUEST_FLAG AS lineUpdateRequest, <!-- LINE.CUCM更新依頼フラグ -->
+						    CUCM_LINE.ERROR_FLG AS lineErrorFlg, <!-- LINE.エラーフラグ -->
+						    VOICE_LOGGER_ASSOCIATION.LOGGER_DATA AS loggerData, <!-- LOGGER DATA -->
+						    CHARGE_ASSOCIATION.BRANCH_ID AS chargeAssociationBranchId, <!-- 課金_拠点ID -->
+						    CHARGE_ASSOCIATION.PARENT_SECTION_ID AS chargeAssociationParentSectionId, <!-- 課金_親店部課ID -->
+						    CHARGE_ASSOCIATION.SECTION_ID AS chargeAssociationSectionId, <!-- 課金_店部課ID -->
+						    R_CUCM_PHONE_LINE.EXTERNAL_PHONE_NUMBER_MASK AS externalPhoneNumberMask, <!-- EXTERNAL PHONE NUMBER MASK -->
+						    R_CUCM_PHONE_LINE.LINE_TEXT_LABEL AS lineTextLabel, <!-- LINE TEXT LABEL -->
+						    R_CUCM_PHONE_LINE.CUCM_PHONE_ID AS cucmtelIdInLine, <!-- 電話ID -->
+						    R_CUCM_PHONE_LINE.CUCM_UPDATE_REQUEST_FLAG AS phoneLineUpdateRequest, <!-- 電話_LINE.更新依頼フラグ -->
+						    R_CUCM_PHONE_LINE.ERROR_FLG AS phoneLineErrorFlg, <!-- 電話_LINE.エラーフラグ -->
+						    R_CUCM_PHONE_LINE.DIALIN AS dialinNumber, <!-- ダイアルイン -->
+						    R_CUCM_PHONE_LINE.INDEX AS lineIndex, <!-- 連番(LINE) -->
+						    CUCM_LINE.USE_VM_FLG AS voiceMailFlg, <!-- ボイスメールフラグ-->
+						    R_CUCM_PHONE_LINE.REMARKS AS telLineRemarks, <!-- 電話備考 -->
+						    CHARGE_ASSOCIATION.REMARKS AS chargeRemarks, <!-- 課金備考 -->
+						    R_CUCM_PHONE_LINE.RINGSETTING_NAME AS ringSettingName <!-- 鳴動設定 -->
+						FROM
+						    CUCM_LINE <!-- LINE -->
+							INNER JOIN R_CUCM_PHONE_LINE <!-- 電話-LINE -->
+							    ON CUCM_LINE.CUCM_LINE_ID = R_CUCM_PHONE_LINE.CUCM_LINE_ID
+							        AND R_CUCM_PHONE_LINE.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+							INNER JOIN VOICE_LOGGER_ASSOCIATION <!-- 通録関連 -->
+							    ON CUCM_LINE.CUCM_LINE_ID = VOICE_LOGGER_ASSOCIATION.CUCM_LINE_ID
+							INNER JOIN CHARGE_ASSOCIATION <!-- 課金関連 -->
+							    ON CUCM_LINE.CUCM_LINE_ID = CHARGE_ASSOCIATION.CUCM_LINE_ID
+						WHERE
+						    CUCM_LINE.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+
+				    ) v_cucm_phone_line
+				      ON CUCM_PHONE.CUCM_PHONE_ID = V_CUCM_PHONE_LINE.cucmtelIdInLine
+				    LEFT OUTER JOIN (
+						<!-- ## ユーザー情報 ## -->
+						SELECT
+						    APP_USER.APP_USER_ID AS userId, <!-- ユーザーID -->
+						    APP_USER.NAME_KANJI AS kanjiUserName, <!-- ユーザー名・漢字 -->
+						    APP_USER.NAME_KANA AS kanaUserName, <!-- ユーザー名カナ -->
+						    APP_USER.ENABLED_SHARED_USE AS sharedUse, <!-- 共有ユーザー区分 -->
+						    APP_USER.CUCM_UPDATE_REQUEST_FLAG AS userUpdateRequest, <!-- CUCM更新依頼フラグ(ユーザー) -->
+						    APP_USER.ERROR_FLG AS userErrorFlg, <!-- エラーフラグ(ユーザ) -->
+						    R_USER_SECTION.COMPANY_ID AS companyId, <!-- 会社ID -->
+						    R_USER_SECTION.SECTION_ID AS sectionId, <!-- 店部課ID -->
+						    R_USER_SECTION.SECTION_NAME AS sectionName, <!-- 店部課名 -->
+						    R_USER_SECTION.PRINT_ORDER AS userSectionPrintorder, <!-- プリント順 -->
+						    R_CUCM_USER_PHONE.CUCM_PHONE_ID AS cucmtelIdInUser, <!-- 電話ID -->
+						    R_CUCM_USER_PHONE.CUCM_UPDATE_REQUEST_FLAG AS userPhoneUpdateRequest, <!-- CUCM 更新依頼フラグ(ユーザー電話) -->
+						    R_CUCM_USER_PHONE.ERROR_FLG AS userPhoneErrorFlg, <!-- エラーフラグ(ユーザ電話) -->
+						    T_SECTION_CHILD.PRINT_ORDER AS childPrintorder, <!-- プリント順 -->
+						    T_SECTION_CHILD.SECTION_NAME AS childSectionName, <!-- 店部課名 -->
+						    T_SECTION_CHILD.PRINT_ORDER AS parentPrintorder <!-- プリント順(親店部課) -->
+						FROM
+						    R_CUCM_USER_PHONE <!-- ユーザー電話 -->
+						INNER JOIN APP_USER <!-- ユーザー -->
+						    ON R_CUCM_USER_PHONE.APP_USER_ID = APP_USER.APP_USER_ID
+						        AND R_CUCM_USER_PHONE.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+						INNER JOIN R_USER_SECTION <!-- ユーザー店部課 -->
+						    ON APP_USER.APP_USER_ID = R_USER_SECTION.APP_USER_ID
+						        AND R_CUCM_USER_PHONE.COMPANY_ID = R_USER_SECTION.COMPANY_ID
+						        AND R_CUCM_USER_PHONE.SECTION_ID = R_USER_SECTION.SECTION_ID
+						        AND R_USER_SECTION.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ-->
+						INNER JOIN M_SECTION T_SECTION_CHILD <!-- 店部課マスタ -->
+						    ON R_USER_SECTION.SECTION_ID = T_SECTION_CHILD.SECTION_ID
+						        AND R_USER_SECTION.COMPANY_ID = T_SECTION_CHILD.COMPANY_ID
+						INNER JOIN M_SECTION T_SECTION_PARENT <!-- 店部課マスタ (親店部課用) -->
+						    ON T_SECTION_CHILD.PARENT_SECTION_ID = T_SECTION_PARENT.SECTION_ID
+						WHERE
+						    APP_USER.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ-->
+				    ) v_cucm_user_phone
+					    ON CUCM_PHONE.CUCM_PHONE_ID = v_cucm_user_phone.cucmtelidinuser
+					LEFT OUTER JOIN TEL_DIR_ASSOCIATION <!-- 電子電話帳関連 -->
+					    ON v_cucm_phone_line.lineId = TEL_DIR_ASSOCIATION.CUCM_LINE_ID
+					    AND CUCM_PHONE.CUCM_PHONE_ID = TEL_DIR_ASSOCIATION.CUCM_PHONE_ID
+					    AND v_cucm_user_phone.userId = TEL_DIR_ASSOCIATION.APP_USER_ID
+					LEFT OUTER JOIN UNITY_ASSOCIATION　<!-- UNITY関連 -->
+					    ON CUCM_PHONE.CUCM_PHONE_ID = UNITY_ASSOCIATION.CUCM_PHONE_ID
+					INNER JOIN M_BRANCH <!-- 拠点マスタ -->
+					    ON CUCM_PHONE.BRANCH_ID = M_BRANCH.BRANCH_ID
+					INNER JOIN M_CLUSTER <!-- クラスタマスタ -->
+					    ON M_BRANCH.CLUSTER_ID = M_CLUSTER.CLUSTER_ID
+					INNER JOIN M_SECTION T_SECTION_CHILD <!-- 店部課マスタ -->
+					    ON CUCM_PHONE.SECTION_ID = T_SECTION_CHILD.SECTION_ID
+					    AND CUCM_PHONE.COMPANY_ID = T_SECTION_CHILD.COMPANY_ID
+					INNER JOIN M_SECTION T_SECTION_PARENT <!-- 店部課 -->
+					    ON T_SECTION_CHILD.PARENT_SECTION_ID = T_SECTION_PARENT.SECTION_ID
+					<!-- ##クラスター系## -->
+					LEFT OUTER JOIN PICKUP_GROUP <!-- ピックアップグループ - -->
+					    ON V_CUCM_PHONE_LINE.PICKUPGROUPNAME = PICKUP_GROUP.NAME
+					    AND M_CLUSTER.CLUSTER_ID = PICKUP_GROUP.CLUSTER_ID
+					WHERE
+					    cucm_phone.deleted =#{COM_FLG_OFF} <!-- 0:削除フラグ -->
+				UNION ALL
+
+				<!-- 電話機と紐付いていないユーザー情報 -->
+				SELECT
+				    NULL AS lineId, <!-- LINEID -->
+				    NULL AS lineIndex, <!-- LINE-INDEX -->
+				    NULL AS pickupGroupName, <!-- ピックアップグループ -->
+				    NULL AS directoryNumber, <!-- 内線番号 -->
+				    NULL AS busyDestination, <!-- 話中転送先 -->
+				    NULL AS noansDestination, <!-- 不応答転送先 -->
+				    NULL AS loggerData, <!-- LOGGER DATA -->
+				    NULL AS chargeAssociationBranchId, <!-- 課金拠点ID -->
+				    NULL AS chargeAssociationParentSectionId, <!-- 課金親店部課ID -->
+				    NULL AS chargeAssociationSectionId, <!-- 課金店部課ID -->
+				    NULL AS lineTextLabel, <!-- LINE TEXT LABEL -->
+				    NULL AS externalPhoneNumberMask, <!-- EXTERNAL_PHONE_NUMBER_MASK -->
+				    NULL AS dialinNumber, <!-- ダイアルイン -->
+				    NULL AS telDirData, <!-- TEL DIR DATA -->
+				    v_user_donthave_phone.userId AS userId, <!-- ユーザーID -->
+				    v_user_donthave_phone.kanjiUserName AS kanjiUserName, <!-- ユーザ名漢字 -->
+				    v_user_donthave_phone.kanaUserName AS kanaUserName, <!-- ユーザ名カナ -->
+				    v_user_donthave_phone.companyId AS companyUserId, <!-- 会社ID (ユーザー) -->
+				    v_user_donthave_phone.sectionId AS sectionUserId, <!-- 店部課ID (ユーザー) -->
+				    v_user_donthave_phone.userSectionparentPrintorder AS userSectionparentPrintorder, <!-- プリント順(親店部課) -->
+				    v_user_donthave_phone.userSectionchildPrintorder AS userSectionchildPrintorder, <!-- プリント順(店部課) -->
+				    v_user_donthave_phone.userSectionPrintorder AS userSectionPrintorder, <!-- プリント順(ユーザ店部課) -->
+				    NULL AS userBranchAll,
+				    NULL AS userBranch,
+				    v_user_donthave_phone.sectionName AS sectionUserName, <!-- 店部課名 -->
+				    v_user_donthave_phone.enabledSharedUse AS sharedUse, <!-- 共有ユーザー区分 -->
+				    NULL AS telId, <!-- 電話ID -->
+				    NULL AS telTypeModel, <!-- 電話機種名 -->
+				    NULL AS macAddress, <!-- MACアドレス -->
+				    NULL AS callingSearchSpaceName, <!-- コーリングサーチスペース名 -->
+				    NULL AS baseLocation, <!-- ロケーション名 -->
+				    NULL AS baseDp, <!-- デバイスプール名 -->
+				    NULL AS branchTelId, <!-- 拠点ID(電話機) -->
+				    NULL AS companyTelId, <!-- 会社ID(電話機) -->
+				    NULL AS sectionTelId, <!-- 店部課ID(電話機) -->
+				    NULL AS phoneButtonTemplete, <!-- ボタンテンプレート名 -->
+				    NULL AS branchTelName, <!-- 拠点名 -->
+				    NULL AS sectionTelName, <!-- 店部課名 -->
+				    NULL AS phoneSectionParentPrintorder, <!-- プリント順 -->
+				    NULL AS phoneSectionChildPrintorder, <!-- プリント順(親店部課電話機) -->
+				    SUBSTRING(v_user_donthave_phone.sectionName, LENGTH(v_user_donthave_phone.childSectionName) + 1) AS searchsectionName, <!-- 店部課名(ユーザー店部課) -->
+				    v_user_donthave_phone.orgId AS orgId, <!-- 組織ID -->
+				    NULL AS clusterId, <!-- クラスターID -->
+				    NULL AS voiceMailFlg, <!-- ボイスメールフラグ -->
+				    NULL AS telLineRemarks, <!-- 電話備考 -->
+				    NULL AS chargeRemarks, <!-- 課金備考 -->
+				    NULL AS addonModuleName1, <!-- 設定モジュール1 -->
+				    NULL AS addonModuleName2, <!-- 設定モジュール2 -->
+				    NULL AS ringSettingName, <!-- 鳴動設定 -->
+				    NULL AS pickupGroupNO, <!-- ピックアップグループ名 -->
+				    NULL AS loggerDataName, <!-- ロガーデータ名 -->
+				    CASE
+				        WHEN v_user_donthave_phone.userUpdateRequest = #{CUCM_UPDATE_FLG_WAIT_2} THEN #{REFLECTION_WAIT} <!-- 2:反映待 -->
+				        WHEN v_user_donthave_phone.userErrorFlg = #{COM_FLG_ON} THEN #{REFLECTION_ERROR} <!-- 1:エラー -->
+				        WHEN v_user_donthave_phone.userUpdateRequest = #{CUCM_UPDATE_FLG_WAIT_3} THEN #{REFLECTION_BATCH} <!-- 4:"" -->
+				        WHEN v_user_donthave_phone.userUpdateRequest = #{CUCM_UPDATE_FLG_WAIT} THEN #{REFLECTION_WAIT} <!-- 2:反映待 -->
+				        ELSE #{REFLECTION_FINISHED} <!-- 3:反映済 -->
+				    END AS statusCode <!-- ステータスコード -->
+					, CASE
+					    WHEN v_user_donthave_phone.userUpdateRequest = #{CUCM_UPDATE_FLG_WAIT_2} THEN #{REFLECTION_WAIT_NAME} <!--2:反映待 -->
+					    WHEN v_user_donthave_phone.userErrorFlg = #{COM_FLG_ON} THEN #{REFLECTION_ERROR_NAME} <!-- 1: エラー -->
+					    WHEN v_user_donthave_phone.userUpdateRequest = #{CUCM_UPDATE_FLG_WAIT_3} THEN #{REFLECTION_BATCH_NAME} <!-- 4:"" -->
+					    WHEN v_user_donthave_phone.userUpdateRequest = #{CUCM_UPDATE_FLG_WAIT} THEN #{REFLECTION_WAIT_NAME} <!-- 2:反映待 -->
+					    ELSE #{REFLECTION_FINISHED_NAME} <!-- 3:反映済 -->
+					END AS status <!-- ステータス名称 -->
+                FROM(
+					SELECT
+					    APP_USER.APP_USER_ID AS userId, <!-- ユーザID -->
+					    APP_USER.NAME_KANJI AS kanjiUserName, <!-- ユーザ名漢字 -->
+					    APP_USER.NAME_KANA AS kanaUserName, <!-- ユーザ名カナ -->
+					    R_USER_SECTION.COMPANY_ID AS companyId, <!-- 会社ID -->
+					    R_USER_SECTION.SECTION_ID AS sectionId, <!-- 店部課ID -->
+					    R_USER_SECTION.SECTION_NAME AS sectionName, <!-- 店部課名 -->
+					    R_USER_SECTION.PRINT_ORDER AS userSectionPrintorder, <!-- プリント順 -->
+					    APP_USER.ENABLED_SHARED_USE AS enabledSharedUse, <!-- 共有ユーザー区分 -->
+					    APP_USER.CUCM_UPDATE_REQUEST_FLAG AS userUpdateRequest, <!-- CUCM更新依頼フラグ -->
+					    APP_USER.ERROR_FLG AS userErrorFlg, <!-- エラーフラグ -->
+					    T_SECTION_PARENT.PRINT_ORDER AS userSectionparentPrintorder, <!-- プリント順(親) -->
+					    T_SECTION_CHILD.PRINT_ORDER AS userSectionchildPrintorder, <!-- プリント順 -->
+					    T_SECTION_CHILD.SECTION_NAME AS childSectionName, <!-- 店部課名 -->
+					    T_SECTION_CHILD.ORG_ID AS orgId <!-- 組織ID -->
+					FROM
+					    APP_USER <!-- ユーザ -->
+					INNER JOIN R_USER_SECTION <!-- ユーザ店部課 -->
+					    ON APP_USER.APP_USER_ID = R_USER_SECTION.APP_USER_ID
+					    AND R_USER_SECTION.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+					INNER JOIN M_SECTION T_SECTION_CHILD <!-- 店部課 -->
+					    ON R_USER_SECTION.COMPANY_ID = T_SECTION_CHILD.COMPANY_ID
+					    AND R_USER_SECTION.SECTION_ID = T_SECTION_CHILD.SECTION_ID
+					INNER JOIN M_SECTION T_SECTION_PARENT <!-- 店部課(親店部課) -->
+					    ON T_SECTION_CHILD.PARENT_SECTION_ID = T_SECTION_PARENT.SECTION_ID
+					WHERE
+					    APP_USER.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+
+					EXCEPT
+
+					SELECT
+					    APP_USER.APP_USER_ID AS userId, <!-- ユーザーID -->
+					    APP_USER.NAME_KANJI AS kanjiUserName, <!-- ユーザ名漢字 -->
+					    APP_USER.NAME_KANA AS kanaUserName, <!-- ユーザ名カナ -->
+					    R_USER_SECTION.COMPANY_ID AS companyId, <!-- 会社ID -->
+					    R_USER_SECTION.SECTION_ID AS sectionId, <!-- 店部課ID -->
+					    R_USER_SECTION.SECTION_NAME AS sectionName, <!-- 店部課名 -->
+					    R_USER_SECTION.PRINT_ORDER AS userSectionPrintorder, <!-- プリント順 -->
+					    APP_USER.ENABLED_SHARED_USE AS enabledSharedUse, <!-- 共有ユーザー区分 -->
+					    APP_USER.CUCM_UPDATE_REQUEST_FLAG AS userUpdateRequest, <!-- CUCM更新依頼フラグ -->
+					    APP_USER.ERROR_FLG AS userErrorFlg, <!-- エラーフラグ -->
+					    T_SECTION_PARENT.PRINT_ORDER AS userSectionparentPrintorder, <!-- プリント順(親) -->
+					    T_SECTION_CHILD.PRINT_ORDER AS userSectionchildPrintorder, <!-- プリント順 -->
+					    T_SECTION_CHILD.SECTION_NAME AS childSectionName, <!-- 店部課名 -->
+					    T_SECTION_CHILD.ORG_ID AS orgId <!-- 組織ID -->
+					FROM
+					    R_CUCM_USER_PHONE <!-- ユーザー電話機 -->
+					INNER JOIN
+					    CUCM_PHONE <!-- 電話機 -->
+					    ON R_CUCM_USER_PHONE.CUCM_PHONE_ID = CUCM_PHONE.CUCM_PHONE_ID
+					    AND R_CUCM_USER_PHONE.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+					INNER JOIN APP_USER <!-- ユーザー情報 -->
+					    ON R_CUCM_USER_PHONE.APP_USER_ID = APP_USER.APP_USER_ID
+					    AND APP_USER.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+					INNER JOIN R_USER_SECTION <!-- ユーザー店部課 -->
+					    ON R_CUCM_USER_PHONE.APP_USER_ID = R_USER_SECTION.APP_USER_ID
+					    AND R_CUCM_USER_PHONE.COMPANY_ID = R_USER_SECTION.COMPANY_ID
+					    AND R_CUCM_USER_PHONE.SECTION_ID = R_USER_SECTION.SECTION_ID
+					    AND R_USER_SECTION.DELETED = #{COM_FLG_OFF} <!-- 0:削除フラグ -->
+					INNER JOIN M_SECTION T_SECTION_CHILD <!-- 店部課 -->
+					    ON R_USER_SECTION.COMPANY_ID = T_SECTION_CHILD.COMPANY_ID
+					    AND R_USER_SECTION.SECTION_ID = T_SECTION_CHILD.SECTION_ID
+					INNER JOIN M_SECTION T_SECTION_PARENT <!-- 店部課(親) -->
+					    ON T_SECTION_CHILD.PARENT_SECTION_ID = T_SECTION_PARENT.SECTION_ID
+                ) v_user_donthave_phone
+		     ) v_tel_user_info
+	</sql>
+
+	<!-- ALL TABLE Export -->
+	<insert id="allTableExport" parameterType="Map">
+	    COPY ${TABLENM} TO ${OUTPUTNM} WITH CSV
+	</insert>
+
+	<!-- ALL TABLE IMPORT -->
+	<insert id="allTableImport" parameterType="Map">
+	    COPY ${TABLENM} FROM ${INPUTNM} WITH CSV
+	</insert>
+
+</mapper>
