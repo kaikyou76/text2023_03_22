@@ -1,0 +1,2910 @@
+swagger: "2.0"
+info:
+  description: |-
+    WEBダイレクトプロジェクトにおけるバックエンドモジュールAPIを記載する。<br>
+    ルートパス設計はSS以降実施する。
+  version: "1.0.0"
+  title: "バックエンドモジュールAPI"
+host: "localhost:8080"
+basePath: "/webdirect"
+# tags.nameにはマルチバイトは使わない
+# description中の改行は<br>で行う
+tags:
+  - name: "Insurance products"
+    description: "保険商品関連IFを定義する"
+  - name: "Disclosure"
+    description: "告知関連IFを定義する"
+  - name: "Apply"
+    description: "申込関連IFを定義する"
+  - name: "Account"
+    description: "アカウント関連IFを定義する"
+  - name: "Batch"
+    description: "スケジューラー起動を想定したIFを定義する"
+  - name: "Back office"
+    description: "管理画面やCRMからコールされるIFを定義する"
+  - name: "Common"
+    description: "業務に依存しない汎用IFを定義する"
+schemes:
+  - "http"
+  - "https"
+paths:
+  /product/design:
+    post:
+      tags:
+        - "Insurance products"
+      summary: "保険商品設計API"
+      description: "生年月日・性別を元に、契約年齢を算出し保険商品ラインナップ取得する。"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              birthDate:
+                type: "string"
+                description: "生年月日"
+              sex:
+                type: "string"
+                description: "性別"
+              baseDate:
+                type: "string"
+                description: "計算基準日"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: object
+            properties:
+              contractAge:
+                type: "integer"
+              products:
+                type: "array"
+                items:
+                  $ref: "#/definitions/ProductLineup"
+              planCache:
+                type: "object"
+                allOf:
+                  - $ref: "#/definitions/PlanCache"
+                description: "プランキャッシュ(契約年齢・性別で抽出したデータ)"
+        "400":
+          description: "Invalid input"
+  # TODO リファクタリング
+  /product/feeRange/find:
+    post:
+      tags:
+        - "Insurance products"
+      summary: "保険料レンジ取得API"
+      description: |-
+        固定要素・生年月日・性別別の保険料レンジを取得する(主契約・特約のパラメーター未精査)。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              birthDate:
+                type: "string"
+                description: "生年月日"
+              sex:
+                type: "string"
+                description: "性別"
+              productDesigns:
+                type: "array"
+                description: "商品設計（制限職種該当有無（restrictionJobExist）は指定不要）"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/ProductDesign"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                salesProductCd:
+                  type: "string"
+                  description: "販売商品コード"
+                appliedProvisionCd:
+                  type: "string"
+                  description: "該当約款コード"
+                benefit:
+                  type: "array"
+                  description: "給付金額(保険金額)"
+                  items:
+                    type: "string"
+                premium:
+                  type: "array"
+                  description: "保険料"
+                  items:
+                    type: "string"
+        "400":
+          description: "Invalid input"
+  # TODO リファクタリング
+  /product/fee/get:
+    post:
+      tags:
+        - "Insurance products"
+      summary: "保険料計算API"
+      description: |-
+        固定要素・生年月日・性別別の保険料を取得する(主契約・特約のパラメーター未精査)。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              birthDate:
+                type: "string"
+                description: "生年月日"
+              sex:
+                type: "string"
+                description: "性別"
+              needCheck:
+                type: "boolean"
+                description: "基幹APIを経由でチェックが必要か"
+              productDesigns:
+                type: "array"
+                description: "商品設計"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/ProductDesign"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                salesProductCd:
+                  type: "string"
+                  description: "販売商品コード"
+                appliedProvisionCd:
+                  type: "string"
+                  description: "該当約款コード"
+                premium:
+                  type: "string"
+                  description: "保険料"
+        "400":
+          description: "Invalid input"
+  /product/validate:
+    post:
+      tags:
+        - "Insurance products"
+      summary: "保険商品チェックAPI"
+      description: |-
+        販売条件チェックAPI経由のチェックと複数同時通算チェックを行い、保険商品の妥当性チェックを行う。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              birthDate:
+                type: "string"
+                description: "生年月日"
+              sex:
+                type: "string"
+                description: "性別"
+              productDesigns:
+                type: "array"
+                description: "チェック対象の商品"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/ProductDesign"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/auth:
+    post:
+      tags:
+        - "Account"
+      summary: "アカウント認証API"
+      description: |-
+        メールアドレスが確認済みのアカウントに対する、アカウント/パスワードか外部認証IDでマッチしたユーザー情報を返却する。<br>初回アクセス時にアカウントを本登録に変更する。<br>指定回数以上認証失敗した場合、アカウントをロックする。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              mailaddress:
+                type: "string"
+                description: "メールアドレス(アカウント/パスワードで認証時必須)"
+              password:
+                type: "string"
+                description: "パスワード(アカウント/パスワードで認証時必須)"
+              extAuthCode:
+                type: "integer"
+                description: "外部認証コード(外部認証時必須)"
+              extAuthId:
+                type: "string"
+                description: "外部認証ID(外部認証時必須)"
+              isFirstLogin:
+                type: "boolean"
+                description: "初回ログインか"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Account"
+        "401":
+          description: "authentication error"
+  /apply/add:
+    post:
+      tags:
+        - "Apply"
+      summary: "申込追加API"
+      description: |-
+        アカウント未発行時：認証・個人データを元に仮アカウントを発行し、商品設計から申込を作成する。<br>アカウント発行済(個人IDが設定されている時)：個人データを元にアカウント情報を更新して、商品設計から申込を作成する。<br>※仮アカウントの通知はメールにて行う。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - individual
+              - acceptances
+              - productDesignsV1
+              - productDesignsV2
+            properties:
+              individual:
+                allOf:
+                  - $ref: "#/definitions/Individual"
+                description: "個人"
+              auth:
+                allOf:
+                  - $ref: "#/definitions/Auth"
+                description: "認証(アカウント発行済の場合には不要)"
+              acceptances:
+                type: "array"
+                description: "承諾"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/Acceptance"
+              productDesignsV1:
+                type: "array"
+                items:
+                  $ref: "#/definitions/ProductDesign"
+                description: "商品設計(当初意向)"
+              productDesignsV2:
+                type: "array"
+                items:
+                  $ref: "#/definitions/ProductDesign"
+                description: "商品設計(最終意向)"
+              agencyCode:
+                type: "string"
+                description: "代理店コード"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/resetPassword:
+    post:
+      tags:
+        - "Account"
+      summary: "パスワード再設定API"
+      description: |-
+        メールアドレスを持つアカウントに対してハッシュ生成を行い、ハッシュ付きURLをメールで送付する。<br>ハッシュの有効期限は現在日時より2時間。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - mailaddress
+            properties:
+              mailaddress:
+                type: "string"
+                description: "メールアドレス"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/resetMailaddress:
+    post:
+      tags:
+        - "Account"
+      summary: "メールアドレス再設定API"
+      description: |-
+        アカウントに対してハッシュ生成を行い、ハッシュ付きURLをメールで送付する。<br>ハッシュの有効期限は現在日時より2時間。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - accountId
+              - mailaddress
+              - confirmMailaddress
+            properties:
+              accountId:
+                type: "integer"
+                description: "アカウントID"
+              mailaddress:
+                type: "string"
+                description: "メールアドレス"
+              confirmMailaddress:
+                type: "string"
+                description: "確認用メールアドレス"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/auth/{hashCode}:
+    get:
+      tags:
+        - "Account"
+      summary: "認証ハッシュチェックAPI"
+      description: |-
+        ハッシュ値が妥当か確認する。<br>ハッシュ値生成方法はSS以降決定。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "hashCode"
+          in: "path"
+          required: true
+          type: "string"
+          description: "ハッシュ値"
+        - name: "hashUsageCode"
+          in: "query"
+          required: true
+          type: "string"
+          description: "ハッシュ用途コード"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Account"
+        "401":
+          description: "authentication error"
+  /account/updatePassword:
+    post:
+      tags:
+        - "Account"
+      summary: "パスワード変更API"
+      description: |-
+        パスワードを変更する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - accountId
+              - password
+              - confirmPassword
+            properties:
+              accountId:
+                type: "integer"
+                description: "アカウントID"
+              password:
+                type: "string"
+                description: "パスワード"
+              confirmPassword:
+                type: "string"
+                description: "確認用パスワード"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/updateMailaddress:
+    post:
+      tags:
+        - "Account"
+      summary: "メールアドレス変更API"
+      description: |-
+        ログインIDとしてのメールアドレスを事前に入力したメールアドレス候補で上書きする。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              mailaddress:
+                type: "string"
+                description: "メールアドレス(アカウント/パスワードで認証時必須)"
+              password:
+                type: "string"
+                description: "パスワード(アカウント/パスワードで認証時必須)"
+              extAuthCode:
+                type: "integer"
+                description: "外部認証コード(外部認証時必須)"
+              extAuthId:
+                type: "string"
+                description: "外部認証ID(外部認証時必須)"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/canCreateNew:
+    post:
+      tags:
+        - "Account"
+      summary: "アカウント発行可否チェックAPI"
+      description: |-
+        メールアドレスや外部認証IDが未登録かどうかをチェックする
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              mailaddress:
+                type: "string"
+                description: "メールアドレス"
+              extAuthCode:
+                type: "integer"
+                description: "外部認証コード(外部認証チェック時、IDとコードはセットで必須)"
+              extAuthId:
+                type: "string"
+                description: "外部認証ID(外部認証チェック時、IDとコードはセットで必須)"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/extAuth/release:
+    post:
+      tags:
+        - "Account"
+      summary: "外部認証解除API"
+      description: |-
+        アカウントIDに対する外部認証情報(外部認証コード・外部認証ID)を削除する
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              accountId:
+                type: "string"
+                description: "アカウントID"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+
+  # TODO 枠だけ作成。仕様は別途定義する
+  /office/account/update:
+    post:
+      tags:
+        - "Back office"
+      summary: "アカウント更新API"
+      description: |-
+        アカウントIDに対するアカウントデータを更新する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - accountId
+            properties:
+              accountId:
+                type: "integer"
+                description: "アカウントID"
+              mailaddress:
+                type: "string"
+                description: "メールアドレス"
+              wannaDisconnect:
+                type: "boolean"
+                description: "メール配信切断可否（true:メール配信を切断する, false:接続する）"
+              telNums:
+                type: "array"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/TelNum"
+                description: "電話番号"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/plan/find:
+    post:
+      tags:
+        - "Back office"
+      summary: "プラン参照API"
+      description: |-
+        プランデータを参照する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              planFileId:
+                type: "integer"
+                description: "プランファイルID。指定しない場合、現在適用中と次回適用予定のプランを返却する。"
+              needFileData:
+                type: "boolean"
+                description: "ファイルデータが必要な場合trueを設定する(デフォルトはfalse)"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            properties:
+              plans:
+                type: "array"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/PlanFile"
+        "400":
+          description: "Invalid input"
+  /office/plan/add:
+    post:
+      tags:
+        - "Back office"
+      summary: "プラン追加API"
+      description: |-
+        プランデータを追加する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - startDatetime
+              - fileName
+              - fileData
+            properties:
+              startDatetime:
+                type: "string"
+                description: "適用開始日時"
+              fileName:
+                type: "string"
+                description: "ファイル名"
+              fileData:
+                type: "string"
+                description: "ファイルデータ（Base64で暗号化された文字列）"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/plan/delete:
+    post:
+      tags:
+        - "Back office"
+      summary: "プラン削除API"
+      description: |-
+        プランファイルIDに対するプランデータを物理削除する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - planFileId
+            properties:
+              planFileId:
+                type: "integer"
+                description: "プランファイルID"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/operator/auth:
+    post:
+      tags:
+        - "Back office"
+      summary: "運用者認証API"
+      description: |-
+        ID／Password方式で運用者を認証する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - mailaddress
+              - password
+            properties:
+              mailaddress:
+                type: "string"
+              password:
+                type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Operator"
+        "401":
+          description: "Invalid input"
+  /office/operator/auth/{hashCode}:
+    get:
+      tags:
+        - "Back office"
+      summary: "運用者認証ハッシュチェックAPI"
+      description: |-
+        ハッシュ値が妥当か確認する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "hashCode"
+          in: "path"
+          required: true
+          type: "string"
+          description: "ハッシュ値"
+        - name: "hashUsageCode"
+          in: "query"
+          required: true
+          type: "string"
+          description: "ハッシュ用途コード"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Operator"
+        "401":
+          description: "Invalid input"
+  /office/operator/resetPassword:
+    post:
+      tags:
+        - "Back office"
+      summary: "運用者パスワード再設定API"
+      description: |-
+        メールアドレスを持つアカウントに対してハッシュ生成を行い、ハッシュ付きURLをメールで送付する。<br>ハッシュの有効期限は現在日時より2時間。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - mailaddress
+            properties:
+              mailaddress:
+                type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/operator/updatePassword:
+    post:
+      tags:
+        - "Back office"
+      summary: "運用者パスワード更新API"
+      description: |-
+        運用者認証ハッシュチェック後、運用者パスワードを更新し、認証ハッシュチェックに利用したハッシュデータを削除する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - operatorId
+              - password
+              - confirmPassword
+            properties:
+              operatorId:
+                type: "integer"
+                description: "運用者ID"
+              password:
+                type: "string"
+                description: "パスワード"
+              confirmPassword:
+                type: "string"
+                description: "確認用パスワード"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/operator/find:
+    post:
+      tags:
+        - "Back office"
+      summary: "運用者参照API"
+      description: |-
+        運用者IDに対する運用者データを取得する。<br>運用者IDを設定しない場合、全取得する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              operatorIds:
+                type: "array"
+                description: "運用者ID(指定しない場合、全取得)"
+                items:
+                  type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Operator"
+        "400":
+          description: "Invalid input"
+  /office/operator/add:
+    post:
+      tags:
+        - "Back office"
+      summary: "運用者追加API"
+      description: |-
+        仮発行状態で運用者を追加し、メールにて通知を行う。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              operators:
+                type: "array"
+                items:
+                  required:
+                    - lastName
+                    - firstName
+                    - mailaddress
+                    - roleCode
+                  properties:
+                    lastName:
+                      type: "string"
+                      description: "姓"
+                    firstName:
+                      type: "string"
+                      description: "名"
+                    mailaddress:
+                      type: "string"
+                      description: "メールアドレス"
+                    roleCode:
+                      type: "integer"
+                      description: "権限コード"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              properties:
+                mailaddress:
+                  type: "string"
+                  description: "作成対象のメールアドレス(失敗時は運用者IDが発行されないため)"
+                isSucceeded:
+                  type: "boolean"
+                  description: "処理成功フラグ"
+        "400":
+          description: "Invalid input"
+  /office/operator/update:
+    post:
+      tags:
+        - "Back office"
+      summary: "運用者更新API"
+      description: |-
+        運用者を更新する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - operatorId
+              - lastName
+              - firstName
+              - mailaddress
+              - roleCode
+            properties:
+              operatorId:
+                type: "integer"
+                description: "運用者ID"
+              lastName:
+                type: "string"
+                description: "姓"
+              firstName:
+                type: "string"
+                description: "名"
+              mailaddress:
+                type: "string"
+                description: "メールアドレス"
+              roleCode:
+                type: "integer"
+                description: "権限コード"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/operator/delete:
+    post:
+      tags:
+        - "Back office"
+      summary: "運用者削除API"
+      description: |-
+        運用者IDに対する運用者を物理削除する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - operatorIds
+            properties:
+              operatorIds:
+                type: "array"
+                description: "運用者ID"
+                items:
+                  type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              properties:
+                operatorId:
+                  type: "integer"
+                  description: "運用者ID"
+                isSucceeded:
+                  type: "boolean"
+                  description: "処理成功フラグ"
+        "400":
+          description: "Invalid input"
+  /common/contact/find:
+    post:
+      tags:
+        - "Common"
+      summary: "連絡参照API"
+      description: "アカウントIDからトピックおよび連絡を取得する。"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              accountId:
+                type: "integer"
+                description: "アカウントID"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              description: "連絡関連データ"
+              properties:
+                contactId:
+                  type: "integer"
+                  description: "連絡ID"
+                contactCode:
+                  type: "string"
+                  description: "連絡対象コード"
+                mailSubject:
+                  type: "string"
+                  description: "メールタイトル"
+                mailContent:
+                  type: "string"
+                  description: "メール本文"
+                messageBoxSubject:
+                  type: "string"
+                  description: "メッセージBoxタイトル"
+                messageBoxContent:
+                  type: "string"
+                  description: "メッセージBox本文"
+                response:
+                  type: "string"
+                  description: "回答"
+                respondedDatetime:
+                  type: "string"
+                  description: "回答日時"
+                createdDatetime:
+                  type: "string"
+                  description: "作成日時"
+                displayedDatetime:
+                  type: "string"
+                  description: "掲載日時"
+                wantDisplay:
+                  type: "boolean"
+                  description: "掲載フラグ"
+                mailSendStartHour:
+                  type: "string"
+                  description: "メール送信可能開始時間"
+                mailSendEndHour:
+                  type: "string"
+                  description: "メール送信可能終了時間"
+                mailSendDatetime:
+                  type: "string"
+                  description: "メール送信日時"
+                mailaddress:
+                  type: "string"
+                  description: "メールアドレス"
+                sendStatusCode:
+                  type: "string"
+                  description: "送信ステータスコード"
+                sendServiceCode:
+                  type: "string"
+                  description: "送信業務コード"
+                sesMessageId:
+                  type: "string"
+                  description: "SES メッセージID"
+                topicId:
+                  type: "integer"
+                  description: "トピックID"
+                topicCategories:
+                  type: "array"
+                  items: 
+                    $ref: "#/definitions/TopicCategory"
+                productAdditionalId:
+                  type: "integer"
+                  description: "商品付加ID"
+                productAdditionalVersion:
+                  type: "integer"
+                  description: "商品付加バージョン"
+                applyId:
+                  type: "integer"
+                  description: "申込ID"
+                accountId:
+                  type: "integer"
+                  description: "アカウントID"
+                productAdditionals:
+                  type: "array"
+                  description: "商品付加(現時点では販売商品コード、証券番号のみ一部の必要な情報を設定)"
+                  items:
+                    properties:
+                      salesProductCd:
+                        type: "string"
+                        description: "販売商品コード"
+                      policyNo:
+                        type: "string"
+                        description: "証券番号"
+        "400":
+          description: "Invalid input"
+  /common/contact/markAsResponded:
+    post:
+      tags:
+        - "Common"
+      summary: "連絡対応済API"
+      description: |-
+        連絡IDに対する要対応連絡を対応済(CRM起点の連絡はCC確認待ち)にする。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              contactId:
+                type: "integer"
+                description: "連絡ID"
+              response:
+                type: "string"
+                description: "回答"
+              topicCategoryCode:
+                type: "string"
+                description: "トピックカテゴリーコード"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /common/resource/code:
+    post:
+      tags:
+        - "Common"
+      summary: "コード値参照API"
+      description: |-
+        コード値とラベルの一覧を返却する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/CodeMaster"
+        "400":
+          description: "Invalid input"
+  /disclosure/start:
+    post:
+      tags:
+        - "Disclosure"
+      summary: "告知開始API"
+      description: |-
+        (未取得の場合)証券番号取得し、AURAセッションを開始(再開)し、回答すべき質問を返却する。
+        セッション開始時に連携されるinput.xmlを保存する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            properties:
+              applyId:
+                type: "integer"
+                description: "申込ID"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            properties:
+              questions:
+                type: "array"
+                items:
+                  $ref: "#/definitions/AuraQuestion"
+              session:
+                $ref: "#/definitions/AuraSession"
+              status:
+                $ref: "#/definitions/AuraStatus"
+              policyNo:
+                type: "string"
+                description: "証券番号"
+        "400":
+          description: "Invalid input"
+  /disclosure/answer:
+    post:
+      tags:
+        - "Disclosure"
+      summary: "告知回答API"
+      description: |-
+        AURAに質問の回答を送信する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            properties:
+              answer:
+                $ref: "#/definitions/AuraAnswer"
+              session:
+                $ref: "#/definitions/AuraSession"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            properties:
+              questions:
+                type: "array"
+                items:
+                  $ref: "#/definitions/AuraQuestion"
+              session:
+                $ref: "#/definitions/AuraSession"
+              status:
+                $ref: "#/definitions/AuraStatus"
+        "400":
+          description: "Invalid input"
+  /disclosure/search:
+    post:
+      tags:
+        - "Disclosure"
+      summary: "告知検索API"
+      description: |-
+        AURAに検索の質問を送信する。(告知回答APIの検索の質問に特化したAPI)
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            properties:
+              answer:
+                type: "object"
+                properties:
+                  questionId:
+                    type: "string"
+                  searchString:
+                    type: "string"
+                    description: "検索の質問を渡す際に必要となるパラメータ"
+              session:
+                $ref: "#/definitions/AuraSession"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            properties:
+              question:
+                $ref: "#/definitions/AuraQuestion"
+              session:
+                $ref: "#/definitions/AuraSession"
+              status:
+                $ref: "#/definitions/AuraStatus"
+        "400":
+          description: "Invalid input"
+
+  /disclosure/complete:
+    post:
+      tags:
+        - "Disclosure"
+      summary: "告知完了API"
+      description: |-
+        AURAに告知完了を通知しOutput.xmlを基幹システムに連携する。<br>複数商品申込み時には画面で入力された回答結果を元に告知完了を行い、同様にOutput.xmlを基幹システムに連携する。<br>謝絶時には上記を行わない。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            properties:
+              session:
+                $ref: "#/definitions/AuraSession"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/update:
+    post:
+      tags:
+        - "Apply"
+      summary: "申込更新API"
+      description: |-
+        入力データを更新し完了ステータスを付加する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - productGroups
+            properties:
+              productGroups:
+                type: "array"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/ProductGroupForUpdate"
+                description: "商品グループ（商品付加、主契約、特約、承諾、契約者、受取人、支払、ドキュメント）"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/submit:
+    post:
+      tags:
+        - "Apply"
+      summary: "申込完了API"
+      description: |-
+        申込データと付随するファイルを基幹システムに連携する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - applyId
+            properties:
+              applyId:
+                type: "integer"
+                description: "申込ID"
+              policyPostCls:
+                type: "string"
+                description: "保険証券郵送区分"
+              applyChangeType:
+                type: "string"
+                description: "申込変更区分"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/find:
+    post:
+      tags:
+        - "Apply"
+      summary: "申込参照API"
+      description: |-
+        アカウントに対する申込データを取得する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              accountId:
+                type: "integer"
+                description: "アカウントID"
+              applyId:
+                type: "integer"
+                description: "申込ID"
+              productAdditionalId:
+                type: "integer"
+                description: "商品付加ID"
+              productAdditionalVersion:
+                type: "integer"
+                description: "商品付加バージョン"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                applyId:
+                  type: "integer"
+                  description: "申込ID"
+                applyDatetime:
+                  type: "string"
+                  description: "申込完了日時"
+                productGroups:
+                  type: "array"
+                  description: "商品グループ（商品付加、主契約、特約、承諾、契約者、受取人、支払、ドキュメント、査定、審査）"
+                  items:
+                    allOf:
+                      - $ref: "#/definitions/ProductGroupForFind"
+        "400":
+          description: "Invalid input"
+  /apply/delete:
+    post:
+      tags:
+        - "Apply"
+      summary: "申込削除API"
+      description: |-
+        申込IDに対する申込データを論理削除する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - applyId
+            properties:
+              applyId:
+                type: "integer"
+                description: "申込ID"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/individual/validate:
+    post:
+      tags:
+        - "Apply"
+      summary: "本人情報チェックAPI"
+      description: "本人確認アシストAPIから取得した本人情報（生年月日、姓名、かな）と、申込データに対する個人情報の情報と突合する。"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - target
+              - individual
+            properties:
+              target:
+                type: "object"
+                required:
+                  - applyId
+                properties:
+                  applyId:
+                    type: "integer"
+                    description: "申込ID"
+              individual:
+                required:
+                  - lastName
+                  - firstName
+                  - lastNameKana
+                  - firstNameKana
+                  - birthDate
+                properties:
+                  lastName:
+                    type: "string"
+                    description: "姓"
+                  firstName:
+                    type: "string"
+                    description: "名"
+                  lastNameKana:
+                    type: "string"
+                    description: "セイ"
+                  firstNameKana:
+                    type: "string"
+                    description: "メイ"
+                  birthDate:
+                    type: "string"
+                    description: "生年月日"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/redesign:
+    post:
+      tags:
+        - "Apply"
+      summary: "申込再設定API"
+      description: |-
+        本人確認書類を更新し、基幹システムの本人確認書類搭載APIをコールする。
+        ※IF項目は申込更新と同様（ただし使用するデータは本人確認書類のみをターゲットとする）
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - productGroups
+            properties:
+              productGroups:
+                type: "array"
+                items:
+                  allOf:
+                    - $ref: "#/definitions/ProductGroupForUpdate"
+                description: 商品グループ（商品付加、主契約、特約、承諾、契約者、受取人、支払、ドキュメント）
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /batch/judgeStatus/import:
+    post:
+      tags:
+        - "Batch"
+      summary: "ステータス同期API"
+      description: "審査ステータスと査定結果を基幹システムから取得する。スケジューラーからの利用を想定している。"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/BatchResult"
+        "400":
+          description: "Invalid input"
+  /office/contact/add:
+    post:
+      tags:
+        - "Back office"
+      summary: "連絡追加・更新API"
+      description: |-
+        連絡IDに紐づくレコードが非存在の場合、連絡レコードを登録し、
+        連絡IDに紐づくレコードが存在する場合、連絡レコードを更新する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              accountId:
+                type: "integer"
+                description: "アカウントID(追加時必須。連絡をアカウントに紐づける場合設定する。)"
+              applyId:
+                type: "integer"
+                description: "申込ID(追加時必須。連絡を申込に紐づける場合設定する。)"
+              productAdditionalId:
+                type: "integer"
+                description: "商品付加ID(追加時必須。連絡を商品に紐づける場合設定する。)"
+              topicCategoryCode:
+                type: "string"
+                description: "トピックカテゴリーコード(追加時必須)"
+              topicStatusCode:
+                type: "string"
+                description: "トピックステータスコード(新規追加時は対応不要、未対応のいずれか、代理回答時は対応済を設定する。)"
+              contactId:
+                type: "integer"
+                description: "連絡ID(更新時必須)"
+              contactCode:
+                type: "string"
+                description: "連絡対象コード(追加時必須)"
+              mailSubject:
+                type: "string"
+                description: "メールタイトル(追加時メールかメッセージBoxのどちらかが必須)"
+              mailContent:
+                type: "string"
+                description: "メール本文(追加時メールかメッセージBoxのどちらかが必須)"
+              messageBoxSubject:
+                type: "string"
+                description: "メッセージBoxタイトル(追加時メールかメッセージBoxのどちらかが必須)"
+              messageBoxContent:
+                type: "string"
+                description: "メッセージBox本文(追加時メールかメッセージBoxのどちらかが必須)"
+              response:
+                type: "string"
+                description: "回答"
+              respondedDatetime:
+                type: "string"
+                description: "回答日時"
+              mailSendStartHour:
+                type: "integer"
+                description: "メール送信可能開始時間(メール送信可能開始~終了時間の間にバッチ処理された連絡に対してメール送信を行う)"
+              mailSendEndHour:
+                type: "integer"
+                description: "メール送信可能終了時間(メール送信可能開始~終了時間の間にバッチ処理された連絡に対してメール送信を行う)"
+              wantDisplay:
+                type: "boolean"
+                description: "掲載フラグ(掲載が必要な場合設定する。)"
+                default: false
+              crmStaffName:
+                type: "string"
+                description: "CRM担当者（担当者の氏名を設定する。書式：姓＋全角スペース＋名）"
+              crmApproverName:
+                type: "string"
+                description: "CRM承認者（承認者の氏名を設定する。主に掲載フラグをONにする（承認する）場合に使用する。書式：姓＋全角スペース＋名）"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/contact/delete:
+    post:
+      tags:
+        - "Back office"
+      summary: "連絡削除API"
+      description: |-
+        連絡IDに対する連絡レコードを論理削除する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - contactIds
+            properties:
+              contactIds:
+                type: "array"
+                description: "連絡ID"
+                items:
+                  type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              properties:
+                contactId:
+                  type: "integer"
+                  description: "連絡ID"
+                isSucceeded:
+                  type: "boolean"
+                  description: "処理成功フラグ"
+        "400":
+          description: "Invalid input"
+  /office/announce/find:
+    post:
+      tags:
+        - "Back office"
+      summary: "アナウンス参照API"
+      description: |-
+        アナウンスIDに対する運用者データを取得する。<br>アナウンスIDを設定しない場合、全取得する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            properties:
+              announceId:
+                type: "array"
+                description: "アナウンスID(指定しない場合、全取得)"
+                items:
+                  type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Announce"
+        "400":
+          description: "Invalid input"
+  /office/announce/add:
+    post:
+      tags:
+        - "Back office"
+      summary: "アナウンス追加・更新API"
+      description: |-
+        アナウンスを追加・更新する。<br>アナウンスIDが入力されていれば、更新処理を行う。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          schema:
+            $ref: "#/definitions/Announce"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /office/announce/delete:
+    post:
+      tags:
+        - "Back office"
+      summary: "アナウンス削除API"
+      description: |-
+        アナウンスIDに対するアナウンスレコードを論理削除する。
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            required:
+              - announceIds
+            properties:
+              announceIds:
+                type: "array"
+                description: "アナウンスID"
+                items:
+                  type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              properties:
+                announceId:
+                  type: "integer"
+                  description: "アナウンスID"
+                isSucceeded:
+                  type: "boolean"
+                  description: "処理成功フラグ"
+        "400":
+          description: "Invalid input"
+  /batch/maintenanceDatabae:
+    post:
+      tags:
+        - "Batch"
+      summary: "データメンテナンスAPI"
+      description: "保持期間をすぎたデータを削除する、日次で実行する。<br><例><br>・一定期間更新ないアカウント・申込データを論理削除する。<br> ・一定期間更新のない仮アカウントを物理削除する。"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/BatchResult"
+        "400":
+          description: "Invalid input"
+  /batch/promotion:
+    post:
+      tags:
+        - "Batch"
+      summary: "フォローメール送信API"
+      description: "申し込みフローが滞っているアカウントにフォローメールを送信する。日次で実行する。"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /common/bounce/update:
+    post:
+      tags:
+        - "Common"
+      summary: "バウンス受信API"
+      description: "Amazon SESからコールされ、メールのバウンス状態を受信する。"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            required:
+              - sesMessageId
+              - becauseOf
+            properties:
+              sesMessageId:
+                type: "string"
+                description: "SESメッセージID"
+              becauseOf:
+                type: "string"
+                description: "バウンス理由"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+definitions:
+  ProductAdditional:
+    type: "object"
+    description: "商品付加"
+    required:
+      - salesProductCd
+      - isCanceled
+      - productAdditionalVersion
+    properties:
+      productAdditionalId:
+        type: "integer"
+        description: "商品付加ID"
+      productAdditionalVersion:
+        type: "integer"
+        description: |-
+          商品付加バージョン<br>バージョン管理する場合、現行からインクリメントする。
+      updateDatetime:
+        type: "string"
+        description: "更新日時"
+      salesProductCd:
+        type: "string"
+        description: "販売商品コード"
+      salesProductNameLabel:
+        type: "string"
+        description: "販売商品名称"
+      salesProductPetNameLabel:
+        type: "string"
+        description: "販売商品愛称"
+      calcBaseDate:
+        type: "string"
+        description: "保険料計算機基準日"
+      disclosuredDate:
+        type: "string"
+        description: "告知完了日"
+      policyNo:
+        type: "string"
+        description: "証券番号"
+      encryptedPolicyNo:
+        type: "string"
+        description: "暗号化証券番号"
+      receiptDiversionPolicyNo:
+        type: "string"
+        description: "収納方法流用元証券番号"
+      contractSpecialProvisions:
+        type: "string"
+        description: "契約日に関する特則"
+      policyPostCls:
+        type: "string"
+        description: "保険証券郵送区分"
+      agencyCode:
+        type: "string"
+        description: "代理店コード"
+      unselectableCds:
+        type: "array"
+        description: "同時申込不可商品"
+        items:
+          type: "string"
+      transferStatusCode:
+        type: "string"
+        description: "連動ステータスコード"
+      applyChangeType:
+        type: "string"
+        description: "申込変更区分"
+      judgementGetDatetime:
+        type: "string"
+        description: "審査取得日時"
+      expirationDatetime:
+        type: "string"
+        description: "有効期限日時"
+      isCanceled:
+        type: "boolean"
+        description: "取消済"
+  ProductLineup:
+    type: "object"
+    description: |-
+      商品ラインナップ<br>UI設計書_インターフェース仕様_商品情報取得APIを参照
+    properties:
+      salesProductCd:
+        type: "string"
+        description: "販売商品コード"
+      salesProductName:
+        type: "string"
+        description: "販売商品名称"
+      salesProductPetName:
+        type: "string"
+        description: "販売商品愛称"
+      basePolicy:
+        type: "object"
+        description: "主約款情報"
+      riders:
+        type: "array"
+        description: "約款情報リスト"
+        items:
+          type: "object"
+  ProductDesign:
+    type: "object"
+    description: "商品設計"
+    properties:
+      salesProductCd:
+        type: "string"
+        description: "販売商品コード"
+      baseDate:
+        type: "string"
+        description: "計算基準日"
+      contractSpecialProvisions:
+        type: "string"
+        description: "契約日に関する特則"
+      restrictionJobExist:
+        type: "string"
+        description: "制限職種該当有無"
+      basePolicy:
+        $ref: "#/definitions/BasePolicy"
+      riders:
+        type: "array"
+        items:
+          $ref: "#/definitions/Rider"
+  BasePolicy:
+    type: "object"
+    description: "主契約(基幹API項目より抽出。UCにより項目を吟味する)"
+    properties:
+      selectableFlg:
+        type: "boolean"
+        description: "選択フラグ"
+      standardProvisionCd:
+        type: "string"
+        description: "標準約款コード"
+      appliedProvisionCd:
+        type: "string"
+        description: "該当約款コード"
+      appliedProvisionVersion:
+        type: "string"
+        description: "該当約款バージョン"
+      provisionName:
+        type: "string"
+        description: "約款名称"
+      benefitFirstPayConvCls:
+        type: "string"
+        description: "初回給付金支払倍率型区分"
+      benefitFirstPayConvClsNameLabel:
+        type: "string"
+        description: "初回給付金支払倍率型区分名称"
+      benefitFirstPayConvClsUnitLabel:
+        type: "string"
+        description: "初回給付金支払倍率型区分単位"
+      insurancePeriodClass:
+        type: "string"
+        description: "保険期間種別"
+      insurancePeriod:
+        type: "string"
+        description: "保険期間"
+      insurancePeriodNameLabel:
+        type: "string"
+        description: "保険期間名称"
+      insurancePeriodUnitLabel:
+        type: "string"
+        description: "保険期間単位"
+      benefit:
+        type: "string"
+        description: "給付金額（保険金額）"
+      benefitNameLabel:
+        type: "string"
+        description: "給付金額（保険金額）名称"
+      benefitUnitLabel:
+        type: "string"
+        description: "給付金額（保険金額）単位"
+      paymentPeriodClass:
+        type: "string"
+        description: "払込期間種別"
+      paymentPeriod:
+        type: "string"
+        description: "払込期間"
+      paymentPeriodNameLabel:
+        type: "string"
+        description: "払込期間名称"
+      paymentPeriodUnitLabel:
+        type: "string"
+        description: "払込期間単位"
+      paymentMethod:
+        type: "string"
+        description: "払込方法（回数）"
+      paymentChannel:
+        type: "string"
+        description: "払込経路"
+      premium:
+        type: "string"
+        description: "保険料"
+      riskSelectionMethod:
+        type: "string"
+        description: "危険選択方法"
+      livingNeedsRider:
+        type: "string"
+        description: "リビング・ニーズ特約有無"
+      livingNeedsRiderNameLabel:
+        type: "string"
+        description: "リビング・ニーズ特約名称"
+      livingNeedsRiderUnitLabel:
+        type: "string"
+        description: "リビング・ニーズ特約単位"
+      freeOfPRiderFlg:
+        type: "string"
+        description: "保険料払込免除特約有無"
+      freeOfPRiderNameLabel:
+        type: "string"
+        description: "保険料払込免除特約名称"
+      freeOfPRiderUnitLabel:
+        type: "string"
+        description: "保険料払込免除特約単位"
+      hosCovPayLimitClass:
+        type: "string"
+        description: "入院給付金支払限度日数型区分"
+      hosCovPayLimitClassNameLabel:
+        type: "string"
+        description: "入院給付金支払限度日数型区分名称"
+      hosCovPayLimitClassUnitLabel:
+        type: "string"
+        description: "入院給付金支払限度日数型区分単位"
+      benefitPayConvCls:
+        type: "string"
+        description: "手術給付金支払倍率区分"
+      benefitPayConvClsNameLabel:
+        type: "string"
+        description: "手術給付金支払倍率区分名称"
+      benefitPayConvClsUnitLabel:
+        type: "string"
+        description: "手術給付金支払倍率区分単位"
+      disHsptUnlmtDaysSpPrv:
+        type: "string"
+        description: "特定疾病支払日数無制限特則"
+      disHsptUnlmtDaysSpPrvNameLabel:
+        type: "string"
+        description: "特定疾病支払日数無制限特則名称"
+      disHsptUnlmtDaysSpPrvUnitLabel:
+        type: "string"
+        description: "特定疾病支払日数無制限特則単位"
+      receiptDiversionExist:
+        type: "string"
+        description: "収納方法流用有無"
+      receiptDiversionPolicyNo:
+        type: "string"
+        description: "収納方法流用元証券番号"
+      diseaseCoverageType:
+        type: "string"
+        description: "保障範囲型区分"
+      diseaseCoverageTypeNameLabel:
+        type: "string"
+        description: "保障範囲型区分名称"
+      diseaseCoverageTypeUnitLabel:
+        type: "string"
+        description: "保障範囲型区分単位"
+      freeOfPremiumRiderCls:
+        type: "string"
+        description: "保険料払込免除特約種類"
+      freeOfPremiumRiderClsNameLabel:
+        type: "string"
+        description: "保険料払込免除特約種類名称"
+      freeOfPremiumRiderClsUnitLabel:
+        type: "string"
+        description: "保険料払込免除特約種類単位"
+      prepayKind:
+        type: "string"
+        description: "前納種類"
+      firstPrepayFrequency:
+        type: "string"
+        description: "前納払込回数"
+      downPaymentBenefit:
+        type: "string"
+        description: "一部一時払給付金額（保険金額）"
+      currencyKind:
+        type: "string"
+        description: "通貨種類"
+  PlanBasePolicy:
+    type: "object"
+    description: "プラン主契約"
+    properties:
+      rider:
+        allOf:
+          - $ref: "#/definitions/BasePolicy"
+      isChosenWell:
+        type: "boolean"
+        description: "商品レコメンドフラグ"
+  Rider:
+    type: "object"
+    description: "特約(基幹API項目より抽出。UCにより項目を吟味する)"
+    properties:
+      serialNumber:
+        type: "integer"
+        description: "シリアル番号"
+      selectableFlg:
+        type: "boolean"
+        description: "選択フラグ"
+      standardProvisionCd:
+        type: "string"
+        description: "標準約款コード"
+      appliedProvisionCd:
+        type: "string"
+        description: "該当約款コード"
+      appliedProvisionVersion:
+        type: "string"
+        description: "該当約款バージョン"
+      provisionName:
+        type: "string"
+        description: "約款名称"
+      benefitFirstPayConvCls:
+        type: "string"
+        description: "初回給付金支払倍率型区分"
+      benefitFirstPayConvClsNameLabel:
+        type: "string"
+        description: "初回給付金支払倍率型区分名称"
+      benefitFirstPayConvClsUnitLabel:
+        type: "string"
+        description: "初回給付金支払倍率型区分単位"
+      insurancePeriodClass:
+        type: "string"
+        description: "保険期間種別"
+      insurancePeriod:
+        type: "string"
+        description: "保険期間"
+      insurancePeriodNameLabel:
+        type: "string"
+        description: "保険期間名称"
+      insurancePeriodUnitLabel:
+        type: "string"
+        description: "保険期間単位"
+      benefit:
+        type: "string"
+        description: "給付金額（保険金額）"
+      benefitNameLabel:
+        type: "string"
+        description: "給付金額（保険金額）名称"
+      benefitUnitLabel:
+        type: "string"
+        description: "給付金額（保険金額）単位"
+      paymentPeriodClass:
+        type: "string"
+        description: "払込期間種別"
+      paymentPeriod:
+        type: "string"
+        description: "払込期間"
+      paymentPeriodNameLabel:
+        type: "string"
+        description: "払込期間名称"
+      paymentPeriodUnitLabel:
+        type: "string"
+        description: "払込期間単位"
+      additionType:
+        type: "string"
+        description: "付加区分"
+      additionTypeNameLabel:
+        type: "string"
+        description: "付加区分名称"
+      additionTypeUnitLabel:
+        type: "string"
+        description: "付加区分単位"
+      diseaseCoverageType:
+        type: "string"
+        description: "保障範囲型区分"
+      diseaseCoverageTypeNameLabel:
+        type: "string"
+        description: "保障範囲型区分名称"
+      diseaseCoverageTypeUnitLabel:
+        type: "string"
+        description: "保障範囲型区分単位"
+      freeOfPremiumRiderCls:
+        type: "string"
+        description: "保険料払込免除特約種類"
+      freeOfPremiumRiderClsNameLabel:
+        type: "string"
+        description: "保険料払込免除特約種類名称"
+      freeOfPremiumRiderClsUnitLabel:
+        type: "string"
+        description: "保険料払込免除特約種類単位"
+      premium:
+        type: "string"
+        description: "保険料"
+      hosCovPayLimitClass:
+        type: "string"
+        description: "入院給付金支払限度日数型区分"
+      hosCovPayLimitClassNameLabel:
+        type: "string"
+        description: "入院給付金支払限度日数型区分名称"
+      hosCovPayLimitClassUnitLabel:
+        type: "string"
+        description: "入院給付金支払限度日数型区分単位"
+      disHsptUnlmtDaysSpPrv:
+        type: "string"
+        description: "特定疾病支払日数無制限特則"
+      disHsptUnlmtDaysSpPrvNameLabel:
+        type: "string"
+        description: "特定疾病支払日数無制限特則名称"
+      disHsptUnlmtDaysSpPrvUnitLabel:
+        type: "string"
+        description: "特定疾病支払日数無制限特則単位"
+      downPaymentBenefit:
+        type: "string"
+        description: "一部一時払給付金額（保険金額）"
+      riskSelectionMethod:
+        type: "string"
+        description: "危険選択方法"
+  Account:
+    type: "object"
+    description: "アカウント"
+    properties:
+      accountId:
+        type: "integer"
+        description: "アカウントID"
+      wannaDisconnect:
+        type: "boolean"
+        description: "メール配信切断可否（true:メール配信を切断する, false:接続する）"
+      individual:
+        $ref: "#/definitions/Individual"
+      auth:
+        $ref: "#/definitions/Auth"
+  Individual:
+    type: "object"
+    description: "個人"
+    required:
+      - lastName
+      - firstName
+      - lastNameKana
+      - firstNameKana
+      - birthDate
+      - sexCode
+      - relationshipCode
+    properties:
+      individualId:
+        type: "integer"
+        description: "個人ID(新規作成時は不要)"
+      lastName:
+        type: "string"
+        description: "姓"
+      firstName:
+        type: "string"
+        description: "名"
+      lastNameKana:
+        type: "string"
+        description: "セイ"
+      firstNameKana:
+        type: "string"
+        description: "メイ"
+      birthDate:
+        type: "string"
+        description: "生年月日"
+      sexCode:
+        type: "string"
+        description: "性別コード"
+      relationshipCode:
+        type: "string"
+        description: "続柄コード"
+      relationshipDetail:
+        type: "string"
+        description: "続柄詳細"
+      zipCode:
+        type: "string"
+        description: "郵便番号"
+      prefectures:
+        type: "string"
+        description: "都道府県"
+      city:
+        type: "string"
+        description: "市区町村"
+      blockStreet:
+        type: "string"
+        description: "丁目番地"
+      buildings:
+        type: "string"
+        description: "建物名"
+      jobCode:
+        type: "string"
+        description: "職業コード"
+      jobSubCode:
+        type: "string"
+        description: "職種コード"
+      jobDetailCode:
+        type: "string"
+        description: "業務内容コード"
+      office:
+        type: "string"
+        description: "勤務先"
+      incomeCode:
+        type: "string"
+        description: "年収コード"
+      mailaddress:
+        type: "string"
+        description: "メールアドレス"
+      telNums:
+        type: "array"
+        description: "電話番号関連"
+        items:
+          allOf:
+            - $ref: "#/definitions/TelNum"
+  Auth:
+    type: "object"
+    description: "認証(外に出すデータは吟味すること)"
+    properties:
+      mailaddress:
+        type: "string"
+        description: "メールアドレス"
+      extAuthCode:
+        type: "integer"
+        description: "外部認証コード"
+      extAuthId:
+        type: "string"
+        description: "外部認証ID"
+      lastLoginDatetime:
+        type: "string"
+        description: "最終ログイン日時"
+      mailaddressCandidate:
+        type: "string"
+        description: "メールアドレス候補"
+      password:
+        type: "string"
+        description: "パスワード（申込追加APIのインプットのみ使用）"
+  Payment:
+    type: "object"
+    description: "支払"
+    properties:
+      productAdditionalId:
+        type: "integer"
+        description: "商品付加ID"
+      paymentChannelCode:
+        type: "integer"
+        description: "払込経路コード"
+      extPaymentId:
+        type: "string"
+        description: "外部支払ID(TODO：要調査)"
+  Document:
+    type: "object"
+    description: "ドキュメント"
+    properties:
+      productAdditionalId:
+        type: "integer"
+        description: "商品付加ID"
+      documentCode:
+        type: "string"
+        description: "ドキュメントコード"
+      fileData:
+        type: "string"
+        description: "ファイルデータ(base64で暗号化された文字列)"
+      createDatetime:
+        type: "string"
+        description: "生成日時"
+  ProductPlan:
+    type: "object"
+    description: "商品単位のプラン情報"
+    properties:
+      salesProductCd:
+        type: "string"
+        description: "販売商品コード"
+      isRecommended:
+        type: "boolean"
+        description: "商品レコメンドフラグ"
+      plans:
+        type: "array"
+        description: "プラン内容のリスト（最大５件まで）"
+        items:
+          type: "object"
+          description: "プラン内容"
+          properties:
+            planNo:
+              type: "string"
+              description: "プラン番号"
+            planName:
+              type: "string"
+              description: "プラン名"
+            planDetail:
+              type: "string"
+              description: "プラン詳細"
+            isRecommended:
+              type: "boolean"
+              description: "プランレコメンドフラグ"
+            basePolicy:
+              allOf:
+                - $ref: "#/definitions/BasePolicy"
+              description: "主契約"
+            riders:
+              type: "array"
+              items:
+                allOf:
+                  - $ref: "#/definitions/Rider"
+                description: "特約"
+  PlanCache:
+    type: "object"
+    description: "契約年齢、性別から抽出した全商品のプラン情報（Redisから取得するプランデータもこの形）"
+    properties:
+      productPlans:
+        type: "array"
+        description: "商品単位のプラン情報リスト"
+        items:
+          allOf:
+            - $ref: "#/definitions/ProductPlan"
+  PlanFile:
+    type: "object"
+    description: "プランファイル"
+    properties:
+      planId:
+        type: "integer"
+        description: "プランファイルID"
+      fileName:
+        type: "string"
+        description: "ファイル名"
+      fileData:
+        type: "string"
+        description: "ファイルデータ"
+      startDateTime:
+        type: "string"
+        description: "適用開始日時"
+      endDateTime:
+        type: "string"
+        description: "適用終了日時"
+      note:
+        type: "string"
+        description: "注釈"
+      isApplying:
+        type: "boolean"
+        description: "適用中プランフラグ（true: 適用中プラン, false: それ以外のプラン）"
+  Operator:
+    type: "object"
+    description: "運用者"
+    properties:
+      operatorId:
+        type: "integer"
+        description: "運用者ID"
+      lastName:
+        type: "string"
+        description: "姓"
+      firstName:
+        type: "string"
+        description: "名"
+      mailaddress:
+        type: "string"
+        description: "メールアドレス"
+      activatedDatetime:
+        type: "string"
+        description: "本登録日時"
+      roleCode:
+        type: "integer"
+        description: "権限コード"
+      loginTrialTimes:
+        type: "string"
+        description: "ログイン試行回数"
+      lastLoginDatetime:
+        type: "string"
+        description: "最終ログイン日時"
+  CodeMaster:
+    type: "object"
+    description: "コードマスター"
+    required:
+      - code
+      - name
+    properties:
+      code:
+        type: "string"
+        description: "コード"
+      name:
+        type: "string"
+        description: "コード名"
+      children:
+        type: "array"
+        description: "子コード"
+        items:
+          $ref: "#/definitions/CodeMaster"
+  Contact:
+    type: "object"
+    description: "連絡"
+    properties:
+      contactId:
+        type: "integer"
+        description: "連絡ID"
+      contactCode:
+        type: "string"
+        description: "連絡対象コード"
+      mailSubject:
+        type: "string"
+        description: "メールタイトル"
+      mailContent:
+        type: "string"
+        description: "メール本文"
+      messageBoxSubject:
+        type: "string"
+        description: "メッセージBoxタイトル"
+      messageBoxContent:
+        type: "string"
+        description: "メッセージBox本文"
+      response:
+        type: "string"
+        description: "回答"
+      respondedDatetime:
+        type: "string"
+        description: "回答日時"
+      createdDatetime:
+        type: "string"
+        description: "作成日時"
+      displayedDatetime:
+        type: "string"
+        description: "掲載日時"
+      wantDisplay:
+        type: "boolean"
+        description: "掲載フラグ"
+      mailSendStartHour:
+        type: "string"
+        description: "メール送信可能開始時間"
+      mailSendEndHour:
+        type: "string"
+        description: "メール送信可能終了時間"
+      mailSendDatetime:
+        type: "string"
+        description: "メール送信日時"
+      mailaddress:
+        type: "string"
+        description: "メールアドレス"
+      sendStatusCode:
+        type: "string"
+        description: "送信ステータスコード"
+      sendServiceCode:
+        type: "string"
+        description: "送信業務コード"
+      sesMessageId:
+        type: "string"
+        description: "SES メッセージID"
+      topicId:
+        type: "integer"
+        description: "トピックID"
+#  トピックDTOについて、作成したものの不使用のためコメントアウト。
+#  Topic:
+#    type: "object"
+#    description: "トピック"
+#    properties:
+#      productAdditionalId:
+#        type: "integer"
+#        description: "商品付加ID"
+#      productAdditionalVersion:
+#        type: "integer"
+#        description: "商品付加バージョン"
+#      applyId:
+#        type: "integer"
+#        description: "申込ID"
+#      accountId:
+#        type: "integer"
+#        description: "アカウントID"
+  TopicCategory:
+    type: "object"
+    description: "トピックカテゴリー"
+    properties:
+      topicCategoryCode:
+        type: "string"
+        description: "トピックカテゴリーコード"
+      topicStatusCode:
+        type: "string"
+        description: "トピックステータスコード"
+  Announce:
+    type: "object"
+    description: "アナウンス"
+    properties:
+      announceId:
+        type: "integer"
+        description: "アナウンスID"
+      subject:
+        type: "string"
+        description: "タイトル"
+      content:
+        type: "string"
+        description: "内容"
+      linkUrl:
+        type: "string"
+        description: "リンク先URL"
+      startDatetime:
+        type: "string"
+        description: "表示開始日時"
+      endDatetime:
+        type: "string"
+        description: "表示終了日時"
+  AuraSession:
+    type: "object"
+    description: "AURAとのリクエストに使用されるセッション項目"
+    properties:
+      applyId:
+        type: "integer"
+        description: "申込ID"
+      etag:
+        type: "string"
+        description: "AURAセッション時に指定するEtag"
+  AuraStatus:
+    type: "object"
+    description: |-
+      AURA告知に対するステータス
+      eアンダーライティングインテグレーションガイドv6参照
+    properties:
+      completed:
+        type: "boolean"
+        description: "告知回答が完了しているか"
+      submitted:
+        type: "boolean"
+        description: "AURAに告知が提出済みか"
+  AuraQuestion:
+    type: "object"
+    description: |-
+      AURA告知
+      eアンダーライティングインテグレーションガイドv6参照
+  AuraAnswer:
+    type: "object"
+    description: |-
+      AURA告知に対する回答(questionType, unknownAnswer以外にもあり)
+      eアンダーライティングインテグレーションガイドv6参照
+    properties:
+      questionId:
+        type: "string"
+      questionType:
+        type: "string"
+      unknownAnswer:
+        type: "boolean"
+      otherParam:
+        type: "object"
+        description: "質問形態により異なるデータ"
+      searchString:
+        type: "string"
+        description: "検索の質問を渡す際に必要となるパラメータ"
+  BatchResult:
+    type: "object"
+    description: "バッチ実行結果を返却する。"
+    properties:
+      resultCode:
+        type: "integer"
+        description: "info/errorのコードを指定"
+      detail:
+        type: "object"
+        description: "エラー時の詳細()"
+        properties:
+          targetId:
+            type: "string"
+            description: "原因特定のために使用するID"
+  TelNum:
+    type: "object"
+    description: "電話番号"
+    properties:
+      telNum:
+        type: "string"
+        description: "電話番号"
+      telNumType:
+        type: "string"
+        description: "電話番号タイプ"
+  Assessment:
+    type: "object"
+    description: "査定"
+    properties:
+      assessmentId:
+        type: "integer"
+        description: "査定ID"
+      productAdditionalId:
+        type: "integer"
+        description: "商品付加ID"
+      productAdditionalVersion:
+        type: "integer"
+        description: "商品付加バージョン"
+      policyNo:
+        type: "string"
+        description: "証券番号"
+      auraProductCd:
+        type: "string"
+        description: "AURA用プロダクトコード"
+      standardProvisionCd:
+        type: "string"
+        description: "標準約款コード"
+      appliedProvisionCd:
+        type: "string"
+        description: "該当約款コード"
+      appliedProvisionVersion:
+        type: "string"
+        description: "該当約款バージョン"
+      decisionCd:
+        type: "string"
+        description: "査定結果コード"
+      freeOfPRiderFlg:
+        type: "string"
+        description: "保険料払込免除特約有無"
+      freeOfPremiumRiderCls:
+        type: "string"
+        description: "保険料払込免除特約種類"
+      diseaseCoverageType:
+        type: "string"
+        description: "保障範囲型区分"
+      amountRestriction:
+        type: "string"
+        description: "金額制限"
+      amountRestriction10k:
+        type: "string"
+        description: "金額制限（万円）"
+      exclusions:
+        type: "array"
+        description: "不担保"
+        items:
+          allOf:
+            - $ref: "#/definitions/Exclusion"
+  Exclusion:
+    type: "object"
+    description: "不担保"
+    properties:
+      serialNumber:
+        type: "integer"
+        description: "シリアル番号"
+      exclusionClassCd:
+        type: "string"
+        description: "不担保種別コード"
+      exclusionPartCd:
+        type: "string"
+        description: "不担保部位・傷病コード"
+      exclusionPeriodCd:
+        type: "string"
+        description: "不担保期間コード"
+      exclusionSpareCd:
+        type: "string"
+        description: "不担保予備コード"
+      exclusionClassName:
+        type: "string"
+        description: "特別条件内容"
+      exclusionPeriodName:
+        type: "string"
+        description: "不担保期間"
+      exclusionPartName:
+        type: "string"
+        description: "不担保部位名称"
+  ProductGroupForUpdate:
+    type: "object"
+    description: "商品グループ（更新用）"
+    properties:
+      productAdditional:
+        allOf:
+          - $ref: "#/definitions/ProductAdditional"
+        description: "商品付加"
+      basePolicy:
+        allOf:
+          - $ref: "#/definitions/BasePolicy"
+        description: "主契約"
+      riders:
+        type: "array"
+        items:
+          allOf:
+            - $ref: "#/definitions/Rider"
+        description: "特約"
+      acceptances:
+        type: "array"
+        items:
+          allOf:
+            - $ref: "#/definitions/Acceptance"
+        description: "承諾"
+      self:
+        allOf:
+          - $ref: "#/definitions/Individual"
+        description: "契約者"
+      receiver:
+        allOf:
+          - $ref: "#/definitions/Individual"
+        description: "受取人"
+      payment:
+        allOf:
+          - $ref: "#/definitions/Payment"
+        description: "支払"
+      docs:
+        type: "array"
+        description: "ドキュメント"
+        items:
+          allOf:
+            - $ref: "#/definitions/Document"
+  ProductGroupForFind:
+    type: "object"
+    description: "商品グループ（参照用）"
+    allOf:
+      - $ref: "#/definitions/ProductGroupForUpdate"
+      - type: "object"
+        properties:
+          assessments:
+            type: "array"
+            description: "査定"
+            items:
+              allOf:
+                - $ref: "#/definitions/Assessment"
+          judgements:
+            type: "array"
+            description: "審査"
+            items:
+              allOf:
+                - $ref: "#/definitions/Judgement"
+  Acceptance:
+    type: "object"
+    description: "承諾"
+    required:
+      - acceptanceTargetCode
+      - acceptanceDatetime
+    properties:
+      acceptanceTargetCode:
+        type: "string"
+        description: "承諾対象コード"
+      acceptanceDatetime:
+        type: "string"
+        description: "承諾日時(日時を指定しない場合、バックエンドで時間を設定する)"
+  Judgement:
+    type: "object"
+    description: "審査"
+    required:
+      - judgementId
+    properties:
+      judgementId:
+        type: "integer"
+        description: "審査ID"
+      productAdditionalId:
+        type: "integer"
+        description: "商品付加ID"
+      productAdditionalVersion:
+        type: "integer"
+        description: "商品付加バージョン"
+      policyNo:
+        type: "string"
+        description: "証券番号"
+      processCode:
+        type: "string"
+        description: "工程コード"
+      processName:
+        type: "string"
+        description: "工程名"
+      contentInspection:
+        type: "string"
+        description: "内容点検に回付"
+      inputProcess:
+        type: "string"
+        description: "入力工程に回付"
+      applicationResetStatus:
+        type: "string"
+        description: "申込取消状況"
+      applicationChangeCls:
+        type: "string"
+        description: "申込変更区分"
+      applicationDataKind:
+        type: "string"
+        description: "申込データ種類"
+      hasDisclosureOnPaper:
+        type: "string"
+        description: "紙告知有無"
+      hasDisclosureDiversion:
+        type: "string"
+        description: "告知流用有無"
+      needInputHealthCertificate:
+        type: "string"
+        description: "健康診断書入力要否"
+      contentInspectionCls:
+        type: "string"
+        description: "内容点検要区分"
+      hasInadequancy:
+        type: "string"
+        description: "不備有無"
+      lincAnswerStatus:
+        type: "string"
+        description: "LINC回答状況"
+      needPrimaryAssessment:
+        type: "string"
+        description: "一次査定要否"
+      needSecondaryAssessment:
+        type: "string"
+        description: "一時保存・二次査定要否"
+      assessmentStatus:
+        type: "string"
+        description: "査定状況"
+      selfVerificationDocumentArrivalStatus:
+        type: "string"
+        description: "本人確認書類到着状況"
+      selfVerificationDocumentStatus:
+        type: "string"
+        description: "契約者本人確認書類点検"
+      receiptDiversionReuseRegistrationStatus:
+        type: "string"
+        description: "収納情報再利用登録状況"
+      receiptAgencyCompanyProcedureStatus:
+        type: "string"
+        description: "収納代行会社手続状況"
+      satisfiedPendingStatus:
+        type: "string"
+        description: "成立保留状況"
+      satisfiedCls:
+        type: "string"
+        description: "成立区分"
+      newContractOrganizationCode:
+        type: "string"
+        description: "新契約計上先組織コード"
+      newContractCollaboratorCode:
+        type: "string"
+        description: "新契約計上先担当者コード"
+      newContractJointOrganizationCode:
+        type: "string"
+        description: "新契約計上先共同組織コード"
+      newContractJointCollaboratorCode:
+        type: "string"
+        description: "新契約計上先共同担当者コード"
+      selfLastNameKana:
+        type: "string"
+        description: "契約者カナ名"
+      selfLastName:
+        type: "string"
+        description: "契約者漢字名"
+      selfBirthDate:
+        type: "string"
+        description: "契約者生年月日"
+      paymentChannel:
+        type: "string"
+        description: "払込経路"
+      note:
+        type: "string"
+        description: "注釈"
+      updateDatetime:
+        type: "string"
+        description: "更新日時"
+      flaws:
+        type: "array"
+        description: "不備"
+        items:
+          allOf:
+            - $ref: "#/definitions/Flaw"
+  Flaw:
+    type: "object"
+    description: "不備"
+    required:
+      - serialNumber
+    properties:
+      serialNumber:
+        type: "integer"
+        description: "シリアル番号"
+      flawCode:
+        type: "string"
+        description: "不備コード"
+      flawReason:
+        type: "string"
+        description: "不備理由"
+      flawType:
+        type: "string"
+        description: "不備区分"
+      flawTypeName:
+        type: "string"
+        description: "不備区分名"
+      flawInfoFreeText:
+        type: "string"
+        description: "不備情報フリーテキスト"

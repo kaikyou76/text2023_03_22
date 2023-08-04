@@ -1,0 +1,486 @@
+swagger: "2.0"
+info:
+  description: "WEBダイレクトプロジェクトにおけるバックエンドモジュールAPIを記載する"
+  version: "1.0.0"
+  title: "バックエンドモジュールAPI"
+host: "localhost:8080"
+basePath: "/webdirect"
+# tags.nameにはマルチバイトは使わない
+tags:
+- name: "Insurance products"
+  description: "保険商品関連IFを定義する"
+- name: "disclosure"
+  description: "告知関連IFを定義する"
+- name: "apply"
+  description: "申込関連IFを定義する"
+- name: "account"
+  description: "アカウント関連IFを定義する"
+- name: "common"
+  description: "業務に依存しない汎用IFを定義する"
+schemes:
+- "http"
+- "https"
+paths:
+  /product/find:
+    post:
+      tags:
+      - "Insurance products"
+      summary: "保険商品設計API"
+      description: "生年月日・性別を元に、契約年齢を算出し保険商品ラインナップ取得する。"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            birthDate:
+              type: "string"
+            sex:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /product/getFeeTable:
+    post:
+      tags:
+      - "Insurance products"
+      summary: "保険料表抽出API"
+      description: |-
+        年齢・性別に対する保険料表を抽出する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            birthDate:
+              type: "string"
+            sex:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /product/validate:
+    post:
+      tags:
+      - "Insurance products"
+      summary: "保険料チェックAPI"
+      description: |-
+        販売条件チェックAPIと複数同時通算APIをコールし、保険料の妥当性チェックを行う。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          $ref: '#/definitions/InsuranceProduct'
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /product/importFeeTable:
+    post:
+      tags:
+      - "Insurance products"
+      summary: "保険料表同期API"
+      description: |-
+        更新のあった保険料表を同期し保存する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/publishTemporary:
+    post:
+      tags:
+      - "account"
+      summary: "仮アカウント発行API"
+      description: |-
+        試算結果とメールアドレスを元に仮アカウントを発行する。<br>仮アカウントの通知はメールにて行う。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            mailaddress:
+              type: "string"
+            calicuration:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/activate:
+    post:
+      tags:
+      - "account"
+      summary: "アカウント本登録API"
+      description: |-
+        対象のメールアドレスに対する仮アカウントを本登録状態に更新する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            mailaddress:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/update:
+    post:
+      tags:
+      - "account"
+      summary: "アカウント更新API"
+      description: |-
+        メールアドレスあるいはパスワードを変更する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            mailaddress:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /common/markAsRead:
+    post:
+      tags:
+      - "common"
+      summary: "メッセージ既読API"
+      description: |-
+        メッセージIDに対するメッセージを既読にする。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            messageId:
+              type: "array"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /disclosure/start:
+    post:
+      tags:
+      - "disclosure"
+      summary: "告知開始API"
+      description: "証券番号取得し、AURAセッションを開始する"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/xml"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          properties:
+            salesProductCd:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /disclosure/answer:
+    post:
+      tags:
+      - "disclosure"
+      summary: "告知回答API"
+      description: |-
+        AURAに質問の回答を送信する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/xml"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          properties:
+            salesProductCd:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /disclosure/complete:
+    post:
+      tags:
+      - "disclosure"
+      summary: "告知完了API"
+      description: |-
+        AURAに告知完了を通知しOutput.xmlを基幹システムに連携する。<br>複数商品申込み時には画面で入力された回答結果を元に告知完了を行い、同様にOutput.xmlを基幹システムに連携する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/xml"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          properties:
+            salesProductCd:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/update:
+    post:
+      tags:
+      - "apply"
+      summary: "申込データ更新API"
+      description: |-
+        申込データと完了ステータスを保存する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+          ## TODO
+            id:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/confirmIndividual:
+    post:
+      tags:
+      - "apply"
+      summary: "本人認証API"
+      description: |-
+        入力情報を元に本人確認データを保存する。<br>dアカウント認証か本人確認書類をアップロードすることで本人確認とする。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            id:
+              type: "string"
+            image:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/submit:
+    post:
+      tags:
+      - "apply"
+      summary: "申込完了API"
+      description: |-
+        申込データと付随するファイルを基幹システムに連携する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            applymentId:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/find:
+    post:
+      tags:
+      - "apply"
+      summary: "申込参照API"
+      description: |-
+        アカウントに対する申込データを取得する。
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+            mailaddress:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /apply/importStatus:
+    post:
+      tags:
+      - "apply"
+      summary: "ステータス同期API"
+      description: "審査ステータスと査定結果を基幹システムから取得する。スケジューラーからの利用を想定している。"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          properties:
+          ## TODO
+            salesProductCd:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /common/sendMail:
+    post:
+      tags:
+      - "common"
+      summary: "メール送信API"
+      description: "宛先・メール件名・本文を元にメール送信を行う"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          properties:
+          ## TODO
+            mailaddress:
+              type: "string"
+            subject:
+              type: "string"
+            content:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /common/maintenanceDatabae:
+    post:
+      tags:
+      - "common"
+      summary: "データメンテナンスAPI"
+      description: "保持期間をすぎたデータを削除する、日次で実行する。<br><例><br>・一定期間更新ないアカウント・申込データを論理削除する。<br> ・一定期間更新のない仮アカウントを物理削除する。"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          properties:
+            mailaddress:
+              type: "string"
+            subject:
+              type: "string"
+            content:
+              type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+  /account/promotion:
+    post:
+      tags:
+      - "account"
+      summary: "販促API"
+      description: "申し込みフローが滞っているアカウントに販促メールを送信する。日次で実行する。"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid input"
+## TODO
+definitions:
+  Applyment:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+  InsuranceProduct:
+    type: "object"
+    properties:
+      id:
+        type: "string"

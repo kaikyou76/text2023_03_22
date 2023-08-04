@@ -1,0 +1,1063 @@
+// 保険商品設計API（商品情報ラインアップ取得APIおよびプラン情報）
+{
+    "contractAge": "20", // 生年月日から計算された契約年齢
+    "products": [ // 商品情報ラインアップ取得API
+        { // 医療(実際は他の4商品も同様に返却される)
+            "salesProductCd": "31A005",
+            "salesProductName": "はなさく医療",
+            "salesProductPetName": "はなさく医療",
+            "unSalectableCds": [
+                "31C003",
+                "31D002"
+            ],
+            "basePolicy": {
+                "selectableFlg": true,
+                "standardProvisionCd": "310",
+                "appliedProvisionCd": "31A",
+                "appliedProvisionVersion": "001",
+                "provisionName": "医療終身保険（無解約払戻金型）",
+                "benefitObj": {
+                    "nameLabel": "日額",
+                    "unitLabel": "円",
+                    "controlType": "List",
+                    "listArray": [
+                        {
+                            "label": "3,000",
+                            "value": 3000
+                        },
+                        {
+                            "label": "4,000",
+                            "value": 4000
+                        },
+                        {
+                            "label": "5,000",
+                            "value": 5000
+                        },
+                        {
+                            "label": "6,000",
+                            "value": 6000
+                        },
+                        {
+                            "label": "7,000",
+                            "value": 7000
+                        },
+                        {
+                            "label": "8,000",
+                            "value": 8000
+                        },
+                        {
+                            "label": "9,000",
+                            "value": 9000
+                        },
+                        {
+                            "label": "10,000",
+                            "value": 10000
+                        }
+                    ]
+                },
+                "insurancePeriodObj": {
+                    "nameLabel": "保険期間",
+                    "unitLabel": "",
+                    "controlType": "Fix",
+                    "listArray": [
+                        {
+                            "label": "終身",
+                            "value": "3000"
+                        }
+                    ]
+                },
+                "paymentPeriodObj": {
+                    "nameLabel": "払込期間",
+                    "unitLabel": "",
+                    "controlType": "List",
+                    "listArray": [
+                        {
+                            "label": "60歳まで",
+                            "value": "60"
+                        },
+                        {
+                            "label": "65歳まで",
+                            "value": "65"
+                        },
+                        {
+                            "label": "70歳まで",
+                            "value": "70"
+                        },
+                        {
+                            "label": "75歳まで",
+                            "value": "75"
+                        },
+                        {
+                            "label": "80歳まで",
+                            "value": "80"
+                        },
+                        {
+                            "label": "終身",
+                            "value": "3000"
+                        }
+                    ]
+                },
+                "hosCovPayLimitClassList": {
+                    "nameLabel": "給付限度の型",
+                    "unitLabel": "",
+                    "controlType": "Option",
+                    "listArray": [
+                        {
+                            "label": "60日型",
+                            "value": "060"
+                        },
+                        {
+                            "label": "120日型",
+                            "value": "120"
+                        }
+                    ]
+                },
+                "benefitPayConvClsList": {
+                    "nameLabel": "手術給付金の型",
+                    "unitLabel": "",
+                    "controlType": "Option",
+                    "listArray": [
+                        {
+                            "label": "手術Ⅰ型",
+                            "value": "1"
+                        },
+                        {
+                            "label": "手術Ⅱ型",
+                            "value": "2"
+                        }
+                    ]
+                },
+                "disHsptUnlmtDaysSpPrvList": {
+                    "nameLabel": "入院支払日数無制限",
+                    "unitLabel": "",
+                    "controlType": "Option",
+                    "listArray": [
+                        {
+                            "label": "無制限なし",
+                            "value": "0"
+                        },
+                        {
+                            "label": "３大疾病入院無制限",
+                            "value": "1"
+                        },
+                        {
+                            "label": "８大疾病入院無制限",
+                            "value": "2"
+                        }
+                    ]
+                }
+            },
+            "riderList": [
+                {
+                    "selectableFlg": false,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1B",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "入院一時給付特約",
+                    "benefitObj": {
+                        "nameLabel": "1回につき",
+                        "unitLabel": "万円",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "1",
+                                "value": 10000
+                            },
+                            {
+                                "label": "2",
+                                "value": 20000
+                            },
+                            {
+                                "label": "3",
+                                "value": 30000
+                            },
+                            {
+                                "label": "4",
+                                "value": 40000
+                            },
+                            {
+                                "label": "5",
+                                "value": 50000
+                            },
+                            {
+                                "label": "6",
+                                "value": 60000
+                            },
+                            {
+                                "label": "7",
+                                "value": 70000
+                            },
+                            {
+                                "label": "8",
+                                "value": 80000
+                            },
+                            {
+                                "label": "9",
+                                "value": 90000
+                            },
+                            {
+                                "label": "10",
+                                "value": 100000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1C",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "女性医療特約",
+                    "benefitObj": {
+                        "nameLabel": "日額",
+                        "unitLabel": "円",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "2,000",
+                                "value": 2000
+                            },
+                            {
+                                "label": "3,000",
+                                "value": 3000
+                            },
+                            {
+                                "label": "4,000",
+                                "value": 40000
+                            },
+                            {
+                                "label": "5,000",
+                                "value": 5000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "hosCovPayLimitClassList": {
+                        "nameLabel": "給付限度の型",
+                        "unitLabel": "",
+                        "controlType": "Fix",
+                        "listArray": [
+                            {
+                                "label": "60日型",
+                                "value": "060"
+                            },
+                            {
+                                "label": "120日型",
+                                "value": "120"
+                            }
+                        ]
+                    },
+                    "disHsptUnlmtDaysSpPrvList": {
+                        "nameLabel": "入院支払日数無制限",
+                        "unitLabel": "",
+                        "controlType": "Fix",
+                        "listArray": [
+                            {
+                                "label": "無制限なし",
+                                "value": "0"
+                            },
+                            {
+                                "label": "がん入院支払日数無制限",
+                                "value": "1"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1D",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "退院後通院特約",
+                    "benefitObj": {
+                        "nameLabel": "日額",
+                        "unitLabel": "円",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "2,000",
+                                "value": 2000
+                            },
+                            {
+                                "label": "3,000",
+                                "value": 3000
+                            },
+                            {
+                                "label": "4,000",
+                                "value": 4000
+                            },
+                            {
+                                "label": "5,000",
+                                "value": 5000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1A",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "先進医療特約",
+                    "additionList": {
+                        "nameLabel": "先進医療の技術料と同額",
+                        "unitLabel": "",
+                        "controlType": "Option",
+                        "listArray": [
+                            {
+                                "label": "付加しない",
+                                "value": "0"
+                            },
+                            {
+                                "label": "付加する",
+                                "value": "1"
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1R",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "特定疾病一時給付特約（２０）",
+                    "additionList": {
+                        "nameLabel": [
+                            "初回",
+                            "2回目以後1回につき"
+                        ],
+                        "unitLabel": "万円",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "10",
+                                "value": 100000
+                            },
+                            {
+                                "label": "20",
+                                "value": 200000
+                            },
+                            {
+                                "label": "30",
+                                "value": 300000
+                            },
+                            {
+                                "label": "40",
+                                "value": 400000
+                            },
+                            {
+                                "label": "50",
+                                "value": 500000
+                            },
+                            {
+                                "label": "60",
+                                "value": 600000
+                            },
+                            {
+                                "label": "70",
+                                "value": 700000
+                            },
+                            {
+                                "label": "80",
+                                "value": 800000
+                            },
+                            {
+                                "label": "90",
+                                "value": 900000
+                            },
+                            {
+                                "label": "100",
+                                "value": 1000000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "diseaseCoverageTypeList": {
+                        "nameLabel": "保障範囲の型",
+                        "unitLabel": "",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "３大疾病Ⅰ型",
+                                "value": "6"
+                            },
+                            {
+                                "label": "３大疾病Ⅱ型",
+                                "value": "7"
+                            },
+                            {
+                                "label": "特定８疾病・臓器移植Ⅰ型",
+                                "value": "4"
+                            },
+                            {
+                                "label": "特定８疾病・臓器移植Ⅱ型",
+                                "value": "5"
+                            }
+                        ]
+                    },
+                    "benefitFirstPayConvClsList": {
+                        "nameLabel": "給付金額の型",
+                        "unitLabel": "",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "同額型",
+                                "value": "1"
+                            },
+                            {
+                                "label": "初回２倍型",
+                                "value": "2"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1F",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "抗がん剤・ホルモン剤治療特約",
+                    "benefitObj": {
+                        "nameLabel": "月額",
+                        "unitLabel": "万円",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "1",
+                                "value": 10000
+                            },
+                            {
+                                "label": "2",
+                                "value": 20000
+                            },
+                            {
+                                "label": "3",
+                                "value": 30000
+                            },
+                            {
+                                "label": "4",
+                                "value": 40000
+                            },
+                            {
+                                "label": "5",
+                                "value": 50000
+                            },
+                            {
+                                "label": "6",
+                                "value": 60000
+                            },
+                            {
+                                "label": "7",
+                                "value": 70000
+                            },
+                            {
+                                "label": "8",
+                                "value": 80000
+                            },
+                            {
+                                "label": "9",
+                                "value": 90000
+                            },
+                            {
+                                "label": "10",
+                                "value": 100000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1E",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "特定損傷特約",
+                    "benefitObj": {
+                        "nameLabel": "1回につき",
+                        "unitLabel": "万円",
+                        "controlType": "Option",
+                        "listArray": [
+                            {
+                                "label": "5",
+                                "value": 50000
+                            },
+                            {
+                                "label": "6",
+                                "value": 60000
+                            },
+                            {
+                                "label": "7",
+                                "value": 70000
+                            },
+                            {
+                                "label": "8",
+                                "value": 80000
+                            },
+                            {
+                                "label": "9",
+                                "value": 90000
+                            },
+                            {
+                                "label": "10",
+                                "value": 100000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳",
+                                "value": "60"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1S",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "女性疾病入院一時給付特約",
+                    "benefitObj": {
+                        "nameLabel": "1回につき",
+                        "unitLabel": "万円",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "1",
+                                "value": 10000
+                            },
+                            {
+                                "label": "2",
+                                "value": 20000
+                            },
+                            {
+                                "label": "3",
+                                "value": 30000
+                            },
+                            {
+                                "label": "4",
+                                "value": 40000
+                            },
+                            {
+                                "label": "5",
+                                "value": 50000
+                            },
+                            {
+                                "label": "6",
+                                "value": 60000
+                            },
+                            {
+                                "label": "7",
+                                "value": 70000
+                            },
+                            {
+                                "label": "8",
+                                "value": 80000
+                            },
+                            {
+                                "label": "9",
+                                "value": 90000
+                            },
+                            {
+                                "label": "10",
+                                "value": 100000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "D10",
+                    "appliedProvisionCd": "D1P",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "がん一時給付特約",
+                    "benefitObj": {
+                        "nameLabel": "1回につき",
+                        "unitLabel": "万円",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "10",
+                                "value": 100000
+                            },
+                            {
+                                "label": "20",
+                                "value": 200000
+                            },
+                            {
+                                "label": "30",
+                                "value": 300000
+                            },
+                            {
+                                "label": "40",
+                                "value": 400000
+                            },
+                            {
+                                "label": "50",
+                                "value": 500000
+                            },
+                            {
+                                "label": "60",
+                                "value": 600000
+                            },
+                            {
+                                "label": "70",
+                                "value": 700000
+                            },
+                            {
+                                "label": "80",
+                                "value": 800000
+                            },
+                            {
+                                "label": "90",
+                                "value": 900000
+                            },
+                            {
+                                "label": "100",
+                                "value": 1000000
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "selectableFlg": true,
+                    "standardProvisionCd": "310",
+                    "appliedProvisionCd": "31A",
+                    "appliedProvisionVersion": "001",
+                    "provisionName": "特定疾病保険料払込免除特約",
+                    "additionList": {
+                        "nameLabel": "",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "付加しない",
+                                "value": "0"
+                            },
+                            {
+                                "label": "付加する",
+                                "value": "1"
+                            }
+                        ]
+                    },
+                    "freeOfPremiumRiderClsList": {
+                        "nameLabel": "保障範囲の型",
+                        "unitLabel": "",
+                        "controlType": "List",
+                        "listArray": [
+                            {
+                                "label": "３大疾病Ⅰ型",
+                                "value": "031"
+                            },
+                            {
+                                "label": "３大疾病Ⅱ型",
+                                "value": "032"
+                            },
+                            {
+                                "label": "特定８疾病・臓器移植Ⅰ型",
+                                "value": "021"
+                            },
+                            {
+                                "label": "特定８疾病・臓器移植Ⅱ型",
+                                "value": "022"
+                            }
+                        ]
+                    },
+                    "insurancePeriodObj": {
+                        "nameLabel": "保険期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    },
+                    "paymentPeriodObj": {
+                        "nameLabel": "払込期間",
+                        "unitLabel": "",
+                        "controlType": "",
+                        "listArray": [
+                            {
+                                "label": "60歳まで",
+                                "value": "60"
+                            },
+                            {
+                                "label": "65歳まで",
+                                "value": "65"
+                            },
+                            {
+                                "label": "70歳まで",
+                                "value": "70"
+                            },
+                            {
+                                "label": "75歳まで",
+                                "value": "75"
+                            },
+                            {
+                                "label": "80歳まで",
+                                "value": "80"
+                            },
+                            {
+                                "label": "終身",
+                                "value": "3000"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "plans": [
+        // プラン情報リストが入ります
+    ]
+}

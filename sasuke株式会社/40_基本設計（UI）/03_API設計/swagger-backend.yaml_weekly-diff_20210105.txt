@@ -1,0 +1,58 @@
+diff --git a/tools/apis/swagger-editor/swagger-backend.yaml b/tools/apis/swagger-editor/swagger-backend.yaml
+index 2764897..b8a9011 100644
+--- a/tools/apis/swagger-editor/swagger-backend.yaml
++++ b/tools/apis/swagger-editor/swagger-backend.yaml
+@@ -1380,6 +1380,37 @@ paths:
+           description: "successful operation"
+         "400":
+           description: "Invalid input"
++  /apply/redesign:
++    post:
++      tags:
++        - "Apply"
++      summary: "申込再設定API"
++      description: |-
++        本人確認書類を更新し、基幹システムの本人確認書類搭載APIをコールする。
++        ※IF項目は申込更新と同様（ただし使用するデータは本人確認書類のみをターゲットとする）
++      consumes:
++        - "application/json"
++      produces:
++        - "application/json"
++      parameters:
++        - name: "body"
++          in: "body"
++          required: true
++          schema:
++            required:
++              - productGroups
++            properties:
++              productGroups:
++                type: "array"
++                items:
++                  allOf:
++                    - $ref: "#/definitions/ProductGroup"
++                description: 商品グループ（商品付加、主契約、特約、承諾、契約者、受取人、支払、ドキュメント）
++      responses:
++        "200":
++          description: "successful operation"
++        "400":
++          description: "Invalid input"
+   /batch/judgeStatus/import:
+     post:
+       tags:
+@@ -2643,10 +2674,12 @@ definitions:
+         items:
+           allOf:
+             - $ref: "#/definitions/Document"
+-      assessment:
+-        allOf:
+-          - $ref: "#/definitions/Assessment"
++      assessments:
++        type: "array"
+         description: "査定"
++        items:
++          allOf:
++            - $ref: "#/definitions/Assessment"
+   Acceptance:
+     type: "object"
+     description: "承諾"

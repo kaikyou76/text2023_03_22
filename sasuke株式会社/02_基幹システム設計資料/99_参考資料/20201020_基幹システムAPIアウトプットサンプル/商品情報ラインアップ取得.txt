@@ -1,0 +1,896 @@
+{
+  "productInfoList": [
+    {
+      "salesProductCd": "31A003",
+      "salesProductName": "はなさく医療",
+      "salesProductPetName": "はなさく医療",
+      "unSelectableCds": [
+        "31C003",
+        "31D002"
+      ],
+      "mainProvisionInfo": {
+        "selectableFlg": false,
+        "standardProvisionCd": "310",
+        "appliedProvisionCd": "31A",
+        "appliedProvisionVersion": "001",
+        "provisionName": "医療終身保険（無解約払戻金型）",
+        "benefitObj": {
+          "nameLabel": "日額",
+          "unitLabel": "円",
+          "controlType": "List",
+          "listArray": [
+            {
+              "label": "3,000",
+              "value": 3000
+            },
+            {
+              "label": "4,000",
+              "value": 4000
+            },
+            {
+              "label": "5,000",
+              "value": 5000
+            },
+            {
+              "label": "6,000",
+              "value": 6000
+            },
+            {
+              "label": "7,000",
+              "value": 7000
+            },
+            {
+              "label": "8,000",
+              "value": 8000
+            },
+            {
+              "label": "9,000",
+              "value": 9000
+            },
+            {
+              "label": "10,000",
+              "value": 10000
+            },
+            {
+              "label": "11,000",
+              "value": 11000
+            },
+            {
+              "label": "12,000",
+              "value": 12000
+            },
+            {
+              "label": "13,000",
+              "value": 13000
+            },
+            {
+              "label": "14,000",
+              "value": 14000
+            },
+            {
+              "label": "15,000",
+              "value": 15000
+            },
+            {
+              "label": "16,000",
+              "value": 16000
+            },
+            {
+              "label": "17,000",
+              "value": 17000
+            },
+            {
+              "label": "18,000",
+              "value": 18000
+            },
+            {
+              "label": "19,000",
+              "value": 19000
+            },
+            {
+              "label": "20,000",
+              "value": 20000
+            }
+          ]
+        },
+        "insurancePeriodObj": {
+          "nameLabel": "保険期間",
+          "unitLabel": "",
+          "controlType": "Fix",
+          "listArray": [
+            {
+              "label": "終身",
+              "value": "3000"
+            }
+          ]
+        },
+        "paymentPeriodObj": {
+          "nameLabel": "払込期間",
+          "unitLabel": "",
+          "controlType": "List",
+          "listArray": [
+            {
+              "label": "60歳",
+              "value": "60"
+            },
+            {
+              "label": "65歳",
+              "value": "65"
+            },
+            {
+              "label": "70歳",
+              "value": "70"
+            },
+            {
+              "label": "75歳",
+              "value": "75"
+            },
+            {
+              "label": "80歳",
+              "value": "80"
+            },
+            {
+              "label": "終身",
+              "value": "3000"
+            }
+          ]
+        },
+        "hosCovPayLimitClassList": {
+          "nameLabel": "給付限度の型",
+          "unitLabel": "",
+          "controlType": "Option",
+          "listArray": [
+            {
+              "label": "60日型",
+              "value": "060"
+            },
+            {
+              "label": "120日型",
+              "value": "120"
+            }
+          ]
+        },
+        "operationRateTypeList": {
+          "nameLabel": "手術給付金の型",
+          "unitLabel": "",
+          "controlType": "Option",
+          "listArray": [
+            {
+              "label": "手術Ⅰ型",
+              "value": "1"
+            },
+            {
+              "label": "手術Ⅱ型",
+              "value": "2"
+            }
+          ]
+        },
+        "paymentUnlimitedDaysList": {
+          "nameLabel": "入院支払日数無制限",
+          "unitLabel": "",
+          "controlType": "Option",
+          "listArray": [
+            {
+              "label": "無制限なし",
+              "value": "0"
+            },
+            {
+              "label": "３大疾病入院無制限",
+              "value": "1"
+            },
+            {
+              "label": "８大疾病入院無制限",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "provisionInfoList": [
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "D10",
+          "appliedProvisionCd": "D1B",
+          "appliedProvisionVersion": "001",
+          "provisionName": "入院一時給付特約",
+          "benefitObj": {
+            "nameLabel": "1回につき",
+            "unitLabel": "万円",
+            "controlType": "List",
+            "listArray": [
+              {
+                "label": "1",
+                "value": 10000
+              },
+              {
+                "label": "2",
+                "value": 20000
+              },
+              {
+                "label": "3",
+                "value": 30000
+              },
+              {
+                "label": "4",
+                "value": 40000
+              },
+              {
+                "label": "5",
+                "value": 50000
+              },
+              {
+                "label": "6",
+                "value": 60000
+              },
+              {
+                "label": "7",
+                "value": 70000
+              },
+              {
+                "label": "8",
+                "value": 80000
+              },
+              {
+                "label": "9",
+                "value": 90000
+              },
+              {
+                "label": "10",
+                "value": 100000
+              },
+              {
+                "label": "11",
+                "value": 110000
+              },
+              {
+                "label": "12",
+                "value": 120000
+              },
+              {
+                "label": "13",
+                "value": 130000
+              },
+              {
+                "label": "14",
+                "value": 140000
+              },
+              {
+                "label": "15",
+                "value": 150000
+              },
+              {
+                "label": "16",
+                "value": 160000
+              },
+              {
+                "label": "17",
+                "value": 170000
+              },
+              {
+                "label": "18",
+                "value": 180000
+              },
+              {
+                "label": "19",
+                "value": 190000
+              },
+              {
+                "label": "20",
+                "value": 200000
+              }
+            ]
+          },
+          "insurancePeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          },
+          "paymentPeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "60歳",
+                "value": "60"
+              },
+              {
+                "label": "65歳",
+                "value": "65"
+              },
+              {
+                "label": "70歳",
+                "value": "70"
+              },
+              {
+                "label": "75歳",
+                "value": "75"
+              },
+              {
+                "label": "80歳",
+                "value": "80"
+              },
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          }
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "310",
+          "appliedProvisionCd": "31A",
+          "appliedProvisionVersion": "001",
+          "provisionName": "特定疾病保険料払込免除特約",
+          "additionList": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "付加しない",
+                "value": "0"
+              },
+              {
+                "label": "付加する",
+                "value": "1"
+              }
+            ]
+          },
+          "freeOfPremiumRiderClsList": {
+            "nameLabel": "保障範囲の型",
+            "unitLabel": "",
+            "controlType": "List",
+            "listArray": [
+              {
+                "label": "３大疾病Ⅰ型",
+                "value": "031"
+              },
+              {
+                "label": "３大疾病Ⅱ型",
+                "value": "032"
+              },
+              {
+                "label": "特定８疾病・臓器移植Ⅰ型",
+                "value": "021"
+              },
+              {
+                "label": "特定８疾病・臓器移植Ⅱ型",
+                "value": "022"
+              }
+            ]
+          },
+          "insurancePeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          },
+          "paymentPeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "60歳",
+                "value": "60"
+              },
+              {
+                "label": "65歳",
+                "value": "65"
+              },
+              {
+                "label": "70歳",
+                "value": "70"
+              },
+              {
+                "label": "75歳",
+                "value": "75"
+              },
+              {
+                "label": "80歳",
+                "value": "80"
+              },
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "salesProductCd": "31A003",
+      "salesProductName": "はなさく医療",
+      "salesProductPetName": "はなさく医療",
+      "unSelectableCds": [
+        "31C003",
+        "31D002"
+      ],
+      "mainProvisionInfo": {
+        "selectableFlg": false,
+        "standardProvisionCd": "310",
+        "appliedProvisionCd": "31A",
+        "appliedProvisionVersion": "001",
+        "provisionName": "医療終身保険（無解約払戻金型）",
+        "benefitObj": {
+          "nameLabel": "日額",
+          "unitLabel": "円",
+          "controlType": "List",
+          "listArray": [
+            {
+              "label": "3,000",
+              "value": 3000
+            },
+            {
+              "label": "4,000",
+              "value": 4000
+            },
+            {
+              "label": "5,000",
+              "value": 5000
+            },
+            {
+              "label": "6,000",
+              "value": 6000
+            },
+            {
+              "label": "7,000",
+              "value": 7000
+            },
+            {
+              "label": "8,000",
+              "value": 8000
+            },
+            {
+              "label": "9,000",
+              "value": 9000
+            },
+            {
+              "label": "10,000",
+              "value": 10000
+            },
+            {
+              "label": "11,000",
+              "value": 11000
+            },
+            {
+              "label": "12,000",
+              "value": 12000
+            },
+            {
+              "label": "13,000",
+              "value": 13000
+            },
+            {
+              "label": "14,000",
+              "value": 14000
+            },
+            {
+              "label": "15,000",
+              "value": 15000
+            },
+            {
+              "label": "16,000",
+              "value": 16000
+            },
+            {
+              "label": "17,000",
+              "value": 17000
+            },
+            {
+              "label": "18,000",
+              "value": 18000
+            },
+            {
+              "label": "19,000",
+              "value": 19000
+            },
+            {
+              "label": "20,000",
+              "value": 20000
+            }
+          ]
+        },
+        "insurancePeriodObj": {
+          "nameLabel": "保険期間",
+          "unitLabel": "",
+          "controlType": "Fix",
+          "listArray": [
+            {
+              "label": "終身",
+              "value": "3000"
+            }
+          ]
+        },
+        "paymentPeriodObj": {
+          "nameLabel": "払込期間",
+          "unitLabel": "",
+          "controlType": "List",
+          "listArray": [
+            {
+              "label": "60歳",
+              "value": "60"
+            },
+            {
+              "label": "65歳",
+              "value": "65"
+            },
+            {
+              "label": "70歳",
+              "value": "70"
+            },
+            {
+              "label": "75歳",
+              "value": "75"
+            },
+            {
+              "label": "80歳",
+              "value": "80"
+            },
+            {
+              "label": "終身",
+              "value": "3000"
+            }
+          ]
+        },
+        "hosCovPayLimitClassList": {
+          "nameLabel": "給付限度の型",
+          "unitLabel": "",
+          "controlType": "Option",
+          "listArray": [
+            {
+              "label": "60日型",
+              "value": "060"
+            },
+            {
+              "label": "120日型",
+              "value": "120"
+            }
+          ]
+        },
+        "operationRateTypeList": {
+          "nameLabel": "手術給付金の型",
+          "unitLabel": "",
+          "controlType": "Option",
+          "listArray": [
+            {
+              "label": "手術Ⅰ型",
+              "value": "1"
+            },
+            {
+              "label": "手術Ⅱ型",
+              "value": "2"
+            }
+          ]
+        },
+        "paymentUnlimitedDaysList": {
+          "nameLabel": "入院支払日数無制限",
+          "unitLabel": "",
+          "controlType": "Option",
+          "listArray": [
+            {
+              "label": "無制限なし",
+              "value": "0"
+            },
+            {
+              "label": "３大疾病入院無制限",
+              "value": "1"
+            },
+            {
+              "label": "８大疾病入院無制限",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "provisionInfoList": [
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "D10",
+          "appliedProvisionCd": "D1B",
+          "appliedProvisionVersion": "001",
+          "provisionName": "入院一時給付特約",
+          "benefitObj": {
+            "nameLabel": "1回につき",
+            "unitLabel": "万円",
+            "controlType": "List",
+            "listArray": [
+              {
+                "label": "1",
+                "value": 10000
+              },
+              {
+                "label": "2",
+                "value": 20000
+              },
+              {
+                "label": "3",
+                "value": 30000
+              },
+              {
+                "label": "4",
+                "value": 40000
+              },
+              {
+                "label": "5",
+                "value": 50000
+              },
+              {
+                "label": "6",
+                "value": 60000
+              },
+              {
+                "label": "7",
+                "value": 70000
+              },
+              {
+                "label": "8",
+                "value": 80000
+              },
+              {
+                "label": "9",
+                "value": 90000
+              },
+              {
+                "label": "10",
+                "value": 100000
+              },
+              {
+                "label": "11",
+                "value": 110000
+              },
+              {
+                "label": "12",
+                "value": 120000
+              },
+              {
+                "label": "13",
+                "value": 130000
+              },
+              {
+                "label": "14",
+                "value": 140000
+              },
+              {
+                "label": "15",
+                "value": 150000
+              },
+              {
+                "label": "16",
+                "value": 160000
+              },
+              {
+                "label": "17",
+                "value": 170000
+              },
+              {
+                "label": "18",
+                "value": 180000
+              },
+              {
+                "label": "19",
+                "value": 190000
+              },
+              {
+                "label": "20",
+                "value": 200000
+              }
+            ]
+          },
+          "insurancePeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          },
+          "paymentPeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "60歳",
+                "value": "60"
+              },
+              {
+                "label": "65歳",
+                "value": "65"
+              },
+              {
+                "label": "70歳",
+                "value": "70"
+              },
+              {
+                "label": "75歳",
+                "value": "75"
+              },
+              {
+                "label": "80歳",
+                "value": "80"
+              },
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          }
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "",
+          "appliedProvisionCd": "",
+          "appliedProvisionVersion": "",
+          "provisionName": ""
+        },
+        {
+          "selectableFlg": false,
+          "standardProvisionCd": "310",
+          "appliedProvisionCd": "31A",
+          "appliedProvisionVersion": "001",
+          "provisionName": "特定疾病保険料払込免除特約",
+          "additionList": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "付加しない",
+                "value": "0"
+              },
+              {
+                "label": "付加する",
+                "value": "1"
+              }
+            ]
+          },
+          "freeOfPremiumRiderClsList": {
+            "nameLabel": "保障範囲の型",
+            "unitLabel": "",
+            "controlType": "List",
+            "listArray": [
+              {
+                "label": "３大疾病Ⅰ型",
+                "value": "031"
+              },
+              {
+                "label": "３大疾病Ⅱ型",
+                "value": "032"
+              },
+              {
+                "label": "特定８疾病・臓器移植Ⅰ型",
+                "value": "021"
+              },
+              {
+                "label": "特定８疾病・臓器移植Ⅱ型",
+                "value": "022"
+              }
+            ]
+          },
+          "insurancePeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          },
+          "paymentPeriodObj": {
+            "nameLabel": "",
+            "unitLabel": "",
+            "controlType": "",
+            "listArray": [
+              {
+                "label": "60歳",
+                "value": "60"
+              },
+              {
+                "label": "65歳",
+                "value": "65"
+              },
+              {
+                "label": "70歳",
+                "value": "70"
+              },
+              {
+                "label": "75歳",
+                "value": "75"
+              },
+              {
+                "label": "80歳",
+                "value": "80"
+              },
+              {
+                "label": "終身",
+                "value": "3000"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
