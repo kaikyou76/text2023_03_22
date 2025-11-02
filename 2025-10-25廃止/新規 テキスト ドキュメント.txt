@@ -1,0 +1,42 @@
+https://kaikyoukun.hatenablog.com/entry/2025/04/17/212912?_gl=1*1nisavq*_gcl_au*NTM3NzM3NTc1LjE3NjE5NjE1MzM.
+
+株式会社フィナンシャル・エージェンシー
+-----------------------------------------------
+案件概要
+保険代理店が提供する子ども保険サービスのウェブサイト改修プロジェクトです。保険会社の保険料変更などに伴う、ウェブサイトの更新・改修が主な業務となります。
+
+必須スキル
+Java: プログラムの読み書きができるレベル（Java Silver程度）
+Git: commit、pull、pushなどの基本的なコマンド操作
+HTML: ファイルの読み書き
+JavaScript: プログラムの読み書き
+CSS: 読み取り
+SQL: 複雑なクエリやデータ分析ができるレベル（中級者以上）
+
+尚可スキル
+VBA: マクロの実行と読み書き
+Velocity: #ifなどの関数を使ったウェブ画面操作
+
+開発環境・ツール
+開発言語: Java, JavaScript, HTML, CSS, SQL, VBA, Velocity
+統合開発環境 (IDE): Eclipse
+テキストエディタ: VS Code（任意）
+バージョン管理: Git (GitLab, TortoiseGit, git bash)
+データベース: MySQL Workbench (RDS)
+チャットツール: Chatwork
+タスク管理: Redmine
+サーバー: Apache, nginx, tomcat
+AWS: EC2, RDS, Route53, WAF, S3, CloudWatch
+
+その他: WinSCP, iReport, YokkaGrep, teraterm など
+
+募集要項
+契約形態: 準委任契約
+
+期間: 9月開始
+
+場所: 恵比寿
+
+就業時間: 9:30～18:30
+
+面談: 1回
